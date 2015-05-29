@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sexy Table - Thead Example</title>
+        <link rel="stylesheet" href="../node_modules/normalize.css/normalize.css" />
+        <link rel="stylesheet" href="../dist/SexyTable.css" />
+        <script src="../node_modules/jquery/dist/jquery.js"></script>
+        <script src="../dist/SexyTable.js"></script>
+        <style type="text/css">
+            .container
+            {
+                width: 50%;
+                margin-top: 50px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            /* We can easily apply styles to the head and body of the table. */
+
+            .thead
+            {
+                box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.75);
+            }
+
+            .tbody
+            {
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Users</h1>
+            <hr>
+            <div class="sexy-table">
+                <div class="thead">
+                    <ul>
+                        <li>First Name</li>
+                        <li>Last Name</li>
+                        <li>Group</li>
+                        <li>Last Login</li>
+                    </ul>
+                </div>
+                <div class="tbody">
+                    <ul>
+                        <li>Brad</li>
+                        <li>Jones</li>
+                        <li>Administrators</li>
+                        <li>01/01/2015 09:00:00</li>
+                    </ul>
+                    <ul>
+                        <li>Foo</li>
+                        <li>Bar</li>
+                        <li>Users</li>
+                        <li>01/01/2015 09:00:00</li>
+                    </ul>
+                    <ul>
+                        <li>Fred</li>
+                        <li>Bob</li>
+                        <li>User</li>
+                        <li>01/01/2015 09:00:00</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

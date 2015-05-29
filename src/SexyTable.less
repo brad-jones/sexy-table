@@ -1,0 +1,102 @@
+////////////////////////////////////////////////////////////////////////////////
+//       _________                     ___________     ___     __
+//      /   _____/ ____ ___  ______ __ \__    ___/____ \_ |__ |  |   ____
+//      \_____  \_/ __ \\  \/  <   |  |  |    |  \__  \ | __ \|  | _/ __ \
+//      /        \  ___/ >    < \___  |  |    |   / __ \| \_\ \  |_\  ___/
+//     /_______  /\___  >__/\_ \/ ____|  |____|  (____  /___  /____/\___  >
+//             \/     \/      \/\/                    \/    \/          \/
+// -----------------------------------------------------------------------------
+//          Designed and Developed by Brad Jones <brad @="bjc.id.au" />
+// -----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * NOTE: We make an assumption and a recommendation that a CSS reset
+ * such as normalize.css will be used in conjuction with this stylesheet.
+ *
+ * @see http://necolas.github.io/normalize.css/
+ */
+
+// see: https://gist.github.com/geddski/2416187
+.sexy-clearfix
+{
+    zoom:1;
+    &:before, &:after{ content:""; display:table; }
+    &:after{ clear: both; }
+}
+
+.sexy-table
+{
+    // Sexy Tables are hidden on page load because we need to let the
+    // javascript calculate the cell width, until this has happened
+    // the table will look awful.
+    visibility: hidden;
+
+    // Sexy Tables expand to take up the entire width of their container.
+    width: 100%;
+
+    // Sexy Tables use UL elements for each table row.
+    ul
+    {
+        // Ensure the row ends up on a new line
+        &:extend(.sexy-clearfix all);
+
+        // Reset the UL list styles
+        list-style: none;
+        margin:0;
+        padding:0;
+
+        // The row expands to take up the entire width of the table.
+        width: 100%;
+
+        // Obviously an LI element represents a table cell.
+        li
+        {
+            // Place all cells onto one line.
+            float: left;
+
+            // Make sure the cell expands to take up the full height of the row.
+            // This is important for the below vertical align css trick.
+            height: 100%;
+
+            // Each cell gets an inner container inserted into it by the js.
+            .inner
+            {
+                // This allows us to vertically align the content of the cell.
+                position: relative;
+                top: 50%;
+                transform: translateY(-50%);
+
+                // Provide some spacing between each cell
+                padding: 1em;
+            }
+        }
+    }
+
+    // This will apply some very plain and simple borders to the table.
+    ul
+    {
+        border-top: 1px solid #000;
+        border-right: 1px solid #000;
+
+        &:last-of-type
+        {
+            border-bottom: 1px solid #000;
+        }
+
+        li
+        {
+            border-left: 1px solid #000;
+        }
+    }
+
+    // Centers all column heading and bolds the text
+    & .thead
+    {
+        .inner
+        {
+            text-align: center;
+            font-weight: bold;
+        }
+    }
+}

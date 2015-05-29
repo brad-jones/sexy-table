@@ -1,0 +1,24 @@
+{
+    "version": "1.5.0-alpha",
+    "compileOnSave": false,
+    "compilerOptions": {
+        "target": "es3",
+        "module": "commonjs",
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": true,
+        "noLib": false,
+        "preserveConstEnums": true,
+        "suppressImplicitAnyIndexErrors": true
+    },
+    "filesGlob": [
+        "./**/*.ts",
+        "!./typings/**/*.d.ts",
+        "./typings/custom.d.ts",
+        "!./node_modules/**/*.ts"
+    ],
+    "files": [
+        "./src/SexyTable.ts",
+        "./typings/custom.d.ts"
+    ]
+}
