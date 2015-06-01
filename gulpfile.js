@@ -6,7 +6,11 @@ var ts = require('gulp-typescript');
 var uglify = require('gulp-uglify');
 var uglifycss = require('gulp-uglifycss');
 
-gulp.task('default', ['compile-ts', 'compile-less']);
+gulp.task('default', function()
+{
+    gulp.watch('./src/**/*.ts', ['compile-ts']);
+    gulp.watch('./src/**/*.less', ['compile-less']);
+});
 
 gulp.task('compile-ts', function()
 {
