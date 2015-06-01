@@ -55,6 +55,14 @@ module SexyTable
          */
         public MakeSortable(): void
         {
+            // If this method is called manually the table may not have the
+            // sortable class. We will add it here so that it gets the correct
+            // styles applied to it.
+            if (!this.container.hasClass('sortable'))
+            {
+                this.container.addClass('sortable');
+            }
+
             this.sorter = new Sorter(this.container);
         }
 

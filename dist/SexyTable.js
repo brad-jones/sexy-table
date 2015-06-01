@@ -223,6 +223,9 @@ var SexyTable;
             this.sizer = new SexyTable.Sizer(this.container);
         }
         Table.prototype.MakeSortable = function () {
+            if (!this.container.hasClass('sortable')) {
+                this.container.addClass('sortable');
+            }
             this.sorter = new SexyTable.Sorter(this.container);
         };
         Table.prototype.InsertCellWrapper = function () {
