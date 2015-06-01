@@ -32,11 +32,11 @@
 .sexy-table ul li {
   float: left;
   height: 100%;
+  display: table;
 }
 .sexy-table ul li .inner {
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
+  display: table-cell;
+  vertical-align: middle;
   padding: 1em;
 }
 .sexy-table ul {
@@ -52,4 +52,7 @@
 .sexy-table .thead .inner {
   text-align: center;
   font-weight: bold;
+}
+.sexy-table.sortable .thead i {
+  padding-left: 5px;
 }
