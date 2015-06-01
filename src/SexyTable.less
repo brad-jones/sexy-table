@@ -56,16 +56,19 @@
             float: left;
 
             // Make sure the cell expands to take up the full height of the row.
-            // This is important for the below vertical align css trick.
+            // This is important so that borders extend to meet the next row.
             height: 100%;
+
+            // We actually use some of the built in table styles.
+            // This enables the vertical align trick below.
+            display: table;
 
             // Each cell gets an inner container inserted into it by the js.
             .inner
             {
-                // This allows us to vertically align the content of the cell.
-                position: relative;
-                top: 50%;
-                transform: translateY(-50%);
+                // Vertically align the content of the cell.
+                display: table-cell;
+                vertical-align: middle;
 
                 // Provide some spacing between each cell
                 padding: 1em;
