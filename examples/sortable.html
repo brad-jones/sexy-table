@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sexy Table - Sortable Example</title>
+        <link rel="stylesheet" href="../node_modules/normalize.css/normalize.css" />
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="../dist/SexyTable.css" />
+        <script src="../node_modules/jquery/dist/jquery.js"></script>
+        <!--[if lt IE 9]><script src="../node_modules/lt-ie-9/lt-ie-9.js"></script><![endif]-->
+        <script src="../dist/SexyTable.js"></script>
+        <style type="text/css">
+            .container
+            {
+                width: 50%;
+                margin-top: 50px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .thead
+            {
+                box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.75);
+            }
+
+            .tbody
+            {
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Users</h1>
+            <hr>
+            <div class="sexy-table sortable">
+
+                <!-- Sortable tables must use thead and tbody containers -->
+
+                <div class="thead">
+                    <ul>
+                        <li>First Name</li>
+                        <li>Last Name</li>
+                        <li>Group</li>
+                        <li>Last Login</li>
+                        <li></li>
+                    </ul>
+                </div>
+                <div class="tbody">
+                    <ul>
+                        <li>Efg</li>
+                        <li>Bar</li>
+                        <li>Users</li>
+                        <li>01/01/2015 10:00:00</li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li>Abc</li>
+                        <li>Jones</li>
+                        <li>Administrators</li>
+                        <li>01/01/2015 09:00:00</li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li>Hij</li>
+                        <li>Bob</li>
+                        <li>User</li>
+                        <li>01/01/2015 11:00:00</li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
