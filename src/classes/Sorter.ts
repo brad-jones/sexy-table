@@ -30,24 +30,14 @@ module SexyTable
         private caseInsensitive = true;
 
         /**
-         * To allow for super fast sorts we read the DOM into a JSON object
-         * once. We then sort the JSON and redraw the table. This object also
-         * represents the intial state of the table so we can easily go back to
-         * it when the sorting is toggled off.
-         */
-        private tableData: Array<Object>;
-
-        /**
          * Give us the tables top level container element.
          * And we will add some sort controls to the tables first row.
          */
-        public constructor(table: JQuery)
+        public constructor(protected table: Table)
         {
-            this.container = table;
+            this.container = this.table.GetContainer();
 
             this.EnsureTableHasThead();
-
-            this.CacheTableData();
 
             this.InsertSortableToggles();
         }
@@ -61,38 +51,6 @@ module SexyTable
                     'Sortable tables MUST use .thead and .tbody containers!'
                 );
             }
-        }
-
-        private CacheTableData(): void
-        {
-            var headings = [];
-            this.container.find('.thead ul').first().find('li').each
-            (
-                function(index, cell)
-                {
-                    headings.push($(cell).find('.inner').text());
-                }
-            );
-
-            var data = [];
-            this.container.find('.tbody ul').each(function(rowNo, row)
-            {
-                // Add a reference to the dom row
-                var rowData = { _dom: row };
-
-                $(row).find('li').each(function(cellNo, cell)
-                {
-                    // Ignore columns with no heading as these can't be sorted
-                    if (headings[cellNo] != "")
-                    {
-                        rowData[headings[cellNo]] = $(cell).find('.inner').text();
-                    }
-                });
-
-                data.push(rowData);
-            });
-
-            this.tableData = data;
         }
 
         private InsertSortableToggles(): void
@@ -156,7 +114,10 @@ module SexyTable
                     this.ReDrawTable
                     (
                         this.newTableData()
-                            .sort(this.sortByKey($(cell).text()))
+                            .sort(this.sortByKey
+                            (
+                                $(cell).text().toLowerCase().replace(" ", "_")
+                            ))
                     );
 
                 break;
@@ -166,14 +127,17 @@ module SexyTable
                     this.ReDrawTable
                     (
                         this.newTableData()
-                            .sort(this.sortByKey($(cell).text()))
+                            .sort(this.sortByKey
+                            (
+                                $(cell).text().toLowerCase().replace(" ", "_")
+                            ))
                             .reverse()
                     );
 
                 break;
 
                 default:
-                    this.ReDrawTable(this.tableData);
+                    this.ReDrawTable(this.table.GetReader().GetSerialized());
             }
         }
 
@@ -191,7 +155,7 @@ module SexyTable
 
         private newTableData(): Array<Object>
         {
-            return this.tableData.slice(0);
+            return this.table.GetReader().GetSerialized().slice(0);
         }
 
         private sortByKey(key)

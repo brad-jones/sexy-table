@@ -19,7 +19,6 @@ module SexyTable
     {
         /**
          * The main container for the entire table.
-         * The default would be <div class="sexy-table"></div>
          */
         private container: JQuery;
 
@@ -27,9 +26,9 @@ module SexyTable
          * Give us the tables top level container element.
          * And we will make ensure it's rows & cells are sized correctly.
          */
-        public constructor(table: JQuery)
+        public constructor(protected table: Table)
         {
-            this.container = table;
+            this.container = this.table.GetContainer();
 
             this.SetWidthOfCells();
 
