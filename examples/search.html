@@ -1,1 +1,110 @@
-TODO... basically a global filter
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sexy Table - Search Example</title>
+        <link rel="stylesheet" href="../node_modules/normalize.css/normalize.css" />
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="../dist/SexyTable.css" />
+        <script src="../node_modules/jquery/dist/jquery.js"></script>
+        <script src="../node_modules/lunr/lunr.js"></script>
+        <!--[if lt IE 9]><script src="../node_modules/lt-ie-9/lt-ie-9.js"></script><![endif]-->
+        <script src="../dist/SexyTable.js"></script>
+        <style type="text/css">
+            .container
+            {
+                width: 50%;
+                margin-top: 50px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .search
+            {
+                float: right;
+            }
+        </style>
+        <script>
+            $(document).ready(function()
+            {
+                $('.search').keypress(function(e)
+                {
+                    if (e.which != 13) return;
+
+                    /**
+                     * It is totally up to the developer to create the
+                     * "Search" UI. This allows for maximum flexiblity.
+                     *
+                     * All SexyTable provides is a Search class that will
+                     * show all rows that match the search term(s).
+                     *
+                     * The rows will be sorted in order of relevance.
+                     * Further sorting can then be done per column.
+                     * Utiling the standard Sorter class is enabled.
+                     *
+                     * To return to the original table with all rows.
+                     * The developer needs to make s query with a null
+                     * or empty search term.
+                     *
+                     * > NOTE: The Search functionality leverages lunr.js
+                     */
+
+                    $('.sexy-table').data('sexy-table').GetSearcher().Query
+                    (
+                        $(this).val()
+                    );
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <input class="search" type="text" placeholder="Search" />
+            <h1>Users</h1>
+            <div style="clear:both"></div>
+            <hr>
+            <div class="sexy-table sortable">
+                <div class="thead">
+                    <ul>
+                        <li>First Name</li>
+                        <li>Last Name</li>
+                        <li>Group</li>
+                        <li>Last Login</li>
+                        <li></li>
+                    </ul>
+                </div>
+                <div class="tbody">
+                    <ul>
+                        <li>Brad</li>
+                        <li>Jones</li>
+                        <li>Administrators</li>
+                        <li>01/01/2015 11:00:00</li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li>Foo</li>
+                        <li>Bar</li>
+                        <li>Users</li>
+                        <li>01/01/2015 10:00:00</li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li>Fred</li>
+                        <li>Bob</li>
+                        <li>User</li>
+                        <li>01/01/2015 12:00:00</li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
