@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sexy Table - Serialise Write Example</title>
+        <link rel="stylesheet" href="../node_modules/normalize.css/normalize.css" />
+        <link rel="stylesheet" href="../dist/SexyTable.css" />
+        <script src="../node_modules/jquery/dist/jquery.js"></script>
+        <script src="../node_modules/transparency/dist/transparency.min.js"></script>
+        <!--[if lt IE 9]><script src="../node_modules/lt-ie-9/lt-ie-9.js"></script><![endif]-->
+        <script src="../dist/SexyTable.js"></script>
+        <style type="text/css">
+            .container
+            {
+                width: 50%;
+                margin-top: 50px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Users</h1>
+            <hr>
+            <div class="sexy-table">
+                <div class="thead">
+                    <ul>
+                        <li>First Name</li>
+                        <li>Last Name</li>
+                        <li>Group</li>
+                        <li>Last Login</li>
+                        <li></li>
+                    </ul>
+                </div>
+                <div class="tbody" data-bind="users">
+                    <ul data-bind="user">
+                        <li data-bind="first_name"></li>
+                        <li data-bind="last_name"></li>
+                        <li data-bind="group"></li>
+                        <li data-bind="last_login"></li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <script>
+
+                /** @see http://leonidas.github.io/transparency/ **/
+
+                $('.sexy-table').render
+                (
+                    {
+                        users:
+                        [
+                            {id: 1, first_name: 'Brad', last_name: 'Jones', group: 'Administrators', last_login: '01/01/2015 09:00:00'},
+                            {id: 2, first_name: 'Foo', last_name: 'Bar', group: 'Users', last_login: '01/01/2015 10:00:00'},
+                            {id: 3, first_name: 'Fred', last_name: 'Bob', group: 'User', last_login: '01/01/2015 11:00:00'},
+                        ]
+                    },
+                    {
+                        "users":
+                        {
+                            "user":
+                            {
+                                "id": function()
+                                {
+                                    return this.id;
+                                }
+                            }
+                        }
+                    }
+                );
+            </script>
+        </div>
+    </body>
+</html>
