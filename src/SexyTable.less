@@ -108,9 +108,22 @@
     {
         .thead
         {
-            i
+            .inner
             {
-                padding-left: 5px;
+                // Because we make the entire cell clickable for sorting
+                // the user can easily select text and looks ugly, this
+                // stops the heading text from being selected. 
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+
+                i
+                {
+                    padding-left: 5px;
+                }
             }
         }
     }
