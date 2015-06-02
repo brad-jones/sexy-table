@@ -35,6 +35,9 @@ module SexyTable
     /**
      * IE8 Bind Polyfill
      *
+     * > TODO: This doesn't really belong here.
+     * > Fork lt-ie-9 and add some ES5 shims.
+     *
      * @see https://goo.gl/5J4TJq
      */
     if (!Function.prototype.bind)
