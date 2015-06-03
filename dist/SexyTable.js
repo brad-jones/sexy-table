@@ -25,17 +25,56 @@ var SexyTable;
 })(SexyTable || (SexyTable = {}));
 var SexyTable;
 (function (SexyTable) {
+    var Filterer = (function () {
+        function Filterer(table) {
+            this.table = table;
+            this.container = this.table.GetContainer();
+            this.EnsureTableHasThead();
+            this.InsertFilterInputs();
+        }
+        Filterer.prototype.EnsureTableHasThead = function () {
+            if (this.container.find('.thead, .tbody').length != 2) {
+                throw new Error('Sortable tables MUST use .thead and .tbody containers!');
+            }
+        };
+        Filterer.prototype.InsertFilterInputs = function () {
+            var headings = this.table.GetReader().GetHeadings();
+            var filters = $('<ul></ul>');
+            for (var i = 0; i < headings.length; i++) {
+                var cell = $('<li><div class="inner"></div></li>');
+                if (headings[i] != "") {
+                    var filter = $('<input name="' + headings[i] + '" type="text" placeholder="All" />');
+                    filter.keyup(this.OnFilter.bind(this, filter));
+                    cell.find('.inner').append(filter);
+                }
+                filters.append(cell);
+            }
+            this.container.find('.thead').append(filters);
+        };
+        Filterer.prototype.OnFilter = function (filter) {
+            this.container.find('.thead input').not(filter).val('');
+            this.table.GetSearcher().Query($(filter).val(), $(filter).attr('name'));
+        };
+        return Filterer;
+    })();
+    SexyTable.Filterer = Filterer;
+})(SexyTable || (SexyTable = {}));
+var SexyTable;
+(function (SexyTable) {
     var Reader = (function () {
         function Reader(table) {
             this.table = table;
             this.container = this.table.GetContainer();
-            this.Serialize();
+            this.original = this.Serialize().slice(0);
         }
         Reader.prototype.GetHeadings = function () {
             return this.headings;
         };
         Reader.prototype.GetSerialized = function () {
             return this.serialized;
+        };
+        Reader.prototype.GetOriginal = function () {
+            return this.original;
         };
         Reader.prototype.Serialize = function () {
             this.serialized = [];
@@ -90,38 +129,8 @@ var SexyTable;
             this.table = table;
             this.container = this.table.GetContainer();
             this.EnsureTableHasThead();
-            this.originalTable = this.table.GetReader().GetSerialized().slice(0);
-            this.BuildIndex();
+            this.BuildIndexes();
         }
-        Searcher.prototype.EnsureTableHasThead = function () {
-            if (this.container.find('.thead, .tbody').length != 2) {
-                throw new Error('Searchable tables MUST use .thead and .tbody containers!');
-            }
-        };
-        Searcher.prototype.BuildIndex = function () {
-            var data = this.table.GetReader().GetSerialized();
-            var headings = this.table.GetReader().GetHeadings();
-            this.index = lunr(function () {
-                this.ref('_guid');
-                for (var i = 0; i < headings.length; i++) {
-                    if (headings[i] != '_guid' && headings[i] != '_dom') {
-                        this.field(headings[i]);
-                    }
-                }
-            });
-            for (var row in data) {
-                var document = {};
-                for (var column in data[row]) {
-                    if (column == '_guid') {
-                        document[column] = data[row][column];
-                    }
-                    else if (column != '_dom') {
-                        document[column] = column + ":" + data[row][column];
-                    }
-                }
-                this.index.add(document);
-            }
-        };
         Searcher.prototype.Query = function (terms, column) {
             if (column === void 0) { column = 'all'; }
             if (terms == null || terms == "") {
@@ -130,58 +139,70 @@ var SexyTable;
             }
             var results = new Array();
             if (column == 'all') {
-                var headings = this.table.GetReader().GetHeadings();
-                for (var i = 0; i < headings.length; i++) {
-                    if (headings[i] != '_guid' && headings[i] != '_dom') {
-                        results = $.merge(results, this.index.search(headings[i] + ":" + terms));
-                    }
-                }
-                results.sort(function (a, b) {
-                    return b['score'] - a['score'];
-                });
-                var resultsNew = new Array();
-                for (var key in results) {
-                    var found = false;
-                    for (var key2 in resultsNew) {
-                        if (results[key].ref === resultsNew[key2].ref) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found)
-                        resultsNew.push(results[key]);
-                }
-                results = resultsNew;
+                results = this.index.search(terms);
             }
             else {
-                results = this.index.search(column + ":" + terms);
+                results = this.perColIndex.search(column + ":" + terms);
             }
-            var rows = new Array();
+            var matches = new Array();
+            var original = this.table.GetReader().GetOriginal();
             for (var result in results) {
-                for (var row in this.originalTable) {
-                    if (results[result].ref == this.originalTable[row]['_guid']) {
-                        rows.push(this.originalTable[row]["_dom"]);
+                for (var row in original) {
+                    if (results[result].ref == original[row]['_guid']) {
+                        matches.push(original[row]);
                     }
                 }
             }
-            this.container.find('.tbody').empty().append(rows);
-            this.table.GetReader().Serialize();
-            var icons = this.container.find('.thead i');
-            icons.removeClass('fa-sort-asc');
-            icons.removeClass('fa-sort-desc');
-            icons.addClass('fa-sort');
+            this.table.Redraw(matches, true);
+            try {
+                this.table.GetSorter().ResetSortIcons();
+            }
+            catch (e) {
+            }
         };
         Searcher.prototype.ResetTable = function () {
-            var rows = new Array();
-            for (var key in this.originalTable) {
-                rows.push(this.originalTable[key]["_dom"]);
+            this.table.Reset();
+            try {
+                this.table.GetSorter().ResetSortIcons();
             }
-            this.container.find('.tbody').empty().append(rows);
-            this.table.GetReader().Serialize();
-            var icons = this.container.find('.thead i');
-            icons.removeClass('fa-sort-asc');
-            icons.removeClass('fa-sort-desc');
-            icons.addClass('fa-sort');
+            catch (e) {
+            }
+        };
+        Searcher.prototype.EnsureTableHasThead = function () {
+            if (this.container.find('.thead, .tbody').length != 2) {
+                throw new Error('Searchable tables MUST use .thead and .tbody containers!');
+            }
+        };
+        Searcher.prototype.BuildIndexes = function () {
+            this.index = this.BuildIndexSchema();
+            this.perColIndex = this.BuildIndexSchema();
+            var data = this.table.GetReader().GetSerialized();
+            for (var row in data) {
+                var documentAll = {}, documentCol = {};
+                for (var column in data[row]) {
+                    if (column == '_guid') {
+                        documentAll[column] = data[row][column];
+                        documentCol[column] = data[row][column];
+                    }
+                    else if (column != '_dom') {
+                        documentAll[column] = data[row][column];
+                        documentCol[column] = column + ":" + data[row][column];
+                    }
+                }
+                this.index.add(documentAll);
+                this.perColIndex.add(documentCol);
+            }
+        };
+        Searcher.prototype.BuildIndexSchema = function () {
+            var headings = this.table.GetReader().GetHeadings();
+            return lunr(function () {
+                this.ref('_guid');
+                for (var i = 0; i < headings.length; i++) {
+                    if (headings[i] != '_guid' && headings[i] != '_dom') {
+                        this.field(headings[i]);
+                    }
+                }
+            });
         };
         return Searcher;
     })();
@@ -259,6 +280,12 @@ var SexyTable;
             this.EnsureTableHasThead();
             this.InsertSortableToggles();
         }
+        Sorter.prototype.ResetSortIcons = function () {
+            var icons = this.container.find('.thead i');
+            icons.removeClass('fa-sort-asc');
+            icons.removeClass('fa-sort-desc');
+            icons.addClass('fa-sort');
+        };
         Sorter.prototype.EnsureTableHasThead = function () {
             if (this.container.find('.thead, .tbody').length != 2) {
                 throw new Error('Sortable tables MUST use .thead and .tbody containers!');
@@ -297,24 +324,23 @@ var SexyTable;
             otherIcons.addClass('fa-sort');
             switch (sortState) {
                 case 'asc':
-                    this.ReDrawTable(this.newTableData().sort(this.sortByKey($(cell).text().toLowerCase().replace(" ", "_"))));
+                    this.table.Redraw(this.SortTable(cell));
                     break;
                 case 'desc':
-                    this.ReDrawTable(this.newTableData().sort(this.sortByKey($(cell).text().toLowerCase().replace(" ", "_"))).reverse());
+                    this.table.Redraw(this.SortTable(cell, true));
                     break;
                 default:
-                    this.ReDrawTable(this.table.GetReader().GetSerialized());
+                    this.table.Redraw(this.table.GetReader().GetSerialized());
             }
         };
-        Sorter.prototype.ReDrawTable = function (data) {
-            var rows = new Array();
-            for (var row in data) {
-                rows.push(data[row]["_dom"]);
-            }
-            this.container.find('.tbody').empty().append(rows);
-        };
-        Sorter.prototype.newTableData = function () {
-            return this.table.GetReader().GetSerialized().slice(0);
+        Sorter.prototype.SortTable = function (cell, reverse) {
+            if (reverse === void 0) { reverse = false; }
+            var column = $(cell).text().toLowerCase().replace(" ", "_");
+            var rows = this.table.GetReader().GetSerialized().slice(0);
+            rows.sort(this.sortByKey(column));
+            if (reverse)
+                rows.reverse();
+            return rows;
         };
         Sorter.prototype.sortByKey = function (key) {
             var that = this;
@@ -370,9 +396,12 @@ var SexyTable;
             if (this.container.hasClass('sortable')) {
                 this.MakeSortable();
             }
+            if (this.container.hasClass('filterable')) {
+                this.MakeFilterable();
+            }
             this.sizer = new SexyTable.Sizer(this);
             if (typeof lunr != 'undefined') {
-                this.searcher = new SexyTable.Searcher(this);
+                this.MakeSearchable();
             }
         }
         Table.prototype.GetContainer = function () {
@@ -385,19 +414,75 @@ var SexyTable;
             return this.sizer;
         };
         Table.prototype.GetSorter = function () {
+            if (this.sorter == null) {
+                throw new Error('Table is not Sortable! Use MakeSortable.');
+            }
             return this.sorter;
         };
         Table.prototype.GetSearcher = function () {
+            if (this.searcher == null) {
+                throw new Error('Table is not Searchable! Use MakeSearchable.');
+            }
             return this.searcher;
         };
+        Table.prototype.GetFilterer = function () {
+            if (this.filterer == null) {
+                throw new Error('Table is not Filterable! Use MakeFilterable.');
+            }
+            return this.filterer;
+        };
+        Table.prototype.InsertCellWrapper = function () {
+            this.container.find('li').wrapInner('<div class="inner"></div>');
+        };
         Table.prototype.MakeSortable = function () {
+            if (this.sorter != null)
+                return;
             if (!this.container.hasClass('sortable')) {
                 this.container.addClass('sortable');
             }
             this.sorter = new SexyTable.Sorter(this);
         };
-        Table.prototype.InsertCellWrapper = function () {
-            this.container.find('li').wrapInner('<div class="inner"></div>');
+        Table.prototype.MakeSearchable = function () {
+            if (this.searcher != null)
+                return;
+            if (typeof lunr == 'undefined') {
+                throw new Error('Searchable tables require Lunr! ' + 'Get it from http://lunrjs.com/');
+            }
+            this.searcher = new SexyTable.Searcher(this);
+        };
+        Table.prototype.MakeFilterable = function () {
+            if (this.filterer != null)
+                return;
+            this.MakeSearchable();
+            if (!this.container.hasClass('filterable')) {
+                this.container.addClass('filterable');
+            }
+            this.filterer = new SexyTable.Filterer(this);
+        };
+        Table.prototype.Redraw = function (rows, reSerialize) {
+            if (reSerialize === void 0) { reSerialize = false; }
+            if (this.container.find('.tbody').length == 0) {
+                throw new Error('Redrawing requires a .tbody container!');
+            }
+            if (typeof rows[0] == 'undefined') {
+                this.container.find('.tbody').empty();
+                return;
+            }
+            var elements = new Array();
+            if (typeof rows[0]['_dom'] != 'undefined') {
+                for (var row in rows) {
+                    elements.push(rows[row]["_dom"]);
+                }
+            }
+            else {
+                elements = rows;
+            }
+            this.container.find('.tbody').empty().append(elements);
+            if (reSerialize)
+                this.reader.Serialize();
+        };
+        Table.prototype.Reset = function () {
+            this.Redraw(this.reader.GetOriginal(), true);
         };
         return Table;
     })();

@@ -64,3 +64,6 @@
 .sexy-table.sortable .thead .inner i {
   padding-left: 5px;
 }
+.sexy-table.filterable .thead input {
+  width: 100%;
+}
