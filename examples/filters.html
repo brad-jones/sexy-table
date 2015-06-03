@@ -1,1 +1,71 @@
-TODO...
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sexy Table - Search Example</title>
+        <link rel="stylesheet" href="../node_modules/normalize.css/normalize.css" />
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="../dist/SexyTable.css" />
+        <script src="../node_modules/jquery/dist/jquery.js"></script>
+        <script src="../node_modules/lunr/lunr.js"></script>
+        <!--[if lt IE 9]><script src="../node_modules/lt-ie-9/lt-ie-9.js"></script><![endif]-->
+        <script src="../dist/SexyTable.js"></script>
+        <style type="text/css">
+            .container
+            {
+                width: 50%;
+                margin-top: 50px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Users</h1>
+            <hr>
+            <div class="sexy-table sortable filterable">
+                <div class="thead">
+                    <ul>
+                        <li>First Name</li>
+                        <li>Last Name</li>
+                        <li>Group</li>
+                        <li>Last Login</li>
+                        <li></li>
+                    </ul>
+                </div>
+                <div class="tbody">
+                    <ul>
+                        <li>Brad</li>
+                        <li>Jones</li>
+                        <li>Administrators</li>
+                        <li>01/01/2015 11:00:00</li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li>Foo</li>
+                        <li>Bar</li>
+                        <li>Users</li>
+                        <li>01/01/2015 10:00:00</li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li>Fred</li>
+                        <li>Bob</li>
+                        <li>User</li>
+                        <li>01/01/2015 12:00:00</li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
