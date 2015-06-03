@@ -39,6 +39,17 @@ module SexyTable
         }
 
         /**
+         * A copy of the table as it was first serialized.
+         * This is very useful for resertting the table to it's orginal state
+         * after sorting / filtering / searching actions have taken place.
+         */
+        protected original: Array<Object>;
+        public GetOriginal(): Array<Object>
+        {
+            return this.original;
+        }
+
+        /**
          * Ties us to an instance of a Table.
          * Sets up the container shortcut.
          */
@@ -46,11 +57,15 @@ module SexyTable
         {
             this.container = this.table.GetContainer();
 
-            this.Serialize();
+            this.original = this.Serialize().slice(0);
         }
 
         /**
-         * Serialize's the DOM into a JSON Like Object
+         * Serialize's the DOM into a JSON Like Object.
+         *
+         * > NOTE: Instead of calling this method everytime you may call this
+         * > once. And then call GetSerialized() which will in effect cache the
+         * > results for you.
          */
         public Serialize(): Array<Object>
         {
@@ -113,6 +128,7 @@ module SexyTable
             var rowData = {}, that = this;
 
             // Create a GUID for our row. This is used by the Searcher.
+            // And is a way to uniquely identify a row without using DOM ID's.
             rowData['_guid'] = this.CreateGuid();
 
             // Add a reference to the dom. This will be useful

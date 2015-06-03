@@ -20,13 +20,18 @@ module SexyTable
         protected container: JQuery;
 
         /**
-         * The lunr.js index.
+         * The main lunr.js index. Use for global searches.
          *
          * @see http://lunrjs.com/
          */
         protected index: lunr.Index;
 
-        protected originalTable: Array<Object>;
+        /**
+         * The per column lunr.js index. Use for column specific searches.
+         *
+         * @see https://goo.gl/1Ao45P
+         */
+        protected perColIndex: lunr.Index;
 
         /**
          * Ties us to an instance of a Table.
@@ -38,11 +43,71 @@ module SexyTable
 
             this.EnsureTableHasThead();
 
-            this.originalTable = this.table.GetReader().GetSerialized().slice(0);
-
-            this.BuildIndex();
+            this.BuildIndexes();
         }
 
+        /**
+         * Using Lunr.js we search the Table for the supplied Terms.
+         *
+         * If the column is set to "all" we search all columns.
+         * Otherwise this needs to be the snake case name of the column.
+         * ie: first_name or col_1 depending on how the table is serialized.
+         *
+         * To reset the table supply a null or empty search term.
+         */
+        public Query(terms: string, column = 'all'): void
+        {
+            // Reset table if no terms suplied
+            if (terms == null || terms == "")
+            {
+                this.ResetTable(); return;
+            }
+
+            // Lets grab some results from Lunr
+            var results = new Array<lunr.IIndexSearchResult>();
+            if (column == 'all')
+            {
+                results = this.index.search(terms);
+            }
+            else
+            {
+                results = this.perColIndex.search(column + ":" + terms);
+            }
+
+            // Collect the rows that match our results from lunr
+            var matches = new Array<Object>();
+            var original = this.table.GetReader().GetOriginal();
+            for (var result in results)
+            {
+                for (var row in original)
+                {
+                    if (results[result].ref == original[row]['_guid'])
+                    {
+                        matches.push(original[row]);
+                    }
+                }
+            }
+
+            // Redraw the table
+            this.table.Redraw(matches, true);
+            try { this.table.GetSorter().ResetSortIcons(); }
+            catch (e){}
+        }
+
+        /**
+         * After a Search Query has been performed
+         * we need a way to go back to the original table.
+         */
+        public ResetTable(): void
+        {
+            this.table.Reset();
+            try { this.table.GetSorter().ResetSortIcons(); }
+            catch (e){}
+        }
+
+        /**
+         * Searchable tables rely on the thead and tbody containers!
+         */
         protected EnsureTableHasThead(): void
         {
             if (this.container.find('.thead, .tbody').length != 2)
@@ -55,15 +120,54 @@ module SexyTable
         }
 
         /**
+         * Build 2 indexes of the table.
+         *
+         *   - We use one for global searches across the entire table.
+         *   - We use a second for searches specific to a column.
+         *
          * @see https://goo.gl/1Ao45P
          */
-        protected BuildIndex(): void
+        protected BuildIndexes(): void
         {
+            // Build the schema's for both indexes
+            this.index = this.BuildIndexSchema();
+            this.perColIndex = this.BuildIndexSchema();
+
+            // Grab the table data
             var data = this.table.GetReader().GetSerialized();
 
+            // Seed both indexes with the table data
+            for (var row in data)
+            {
+                var documentAll = {}, documentCol = {};
+
+                for (var column in data[row])
+                {
+                    if (column == '_guid')
+                    {
+                        documentAll[column] = data[row][column];
+                        documentCol[column] = data[row][column];
+                    }
+                    else if(column != '_dom')
+                    {
+                        documentAll[column] = data[row][column];
+                        documentCol[column] = column + ":" + data[row][column];
+                    }
+                }
+
+                this.index.add(documentAll);
+                this.perColIndex.add(documentCol);
+            }
+        }
+
+        /**
+         * Builds the Lunr Index Schema for both indexes.
+         */
+        protected BuildIndexSchema(): lunr.Index
+        {
             var headings = this.table.GetReader().GetHeadings();
 
-            this.index = lunr(function()
+            return lunr(function()
             {
                 this.ref('_guid');
 
@@ -75,139 +179,6 @@ module SexyTable
                     }
                 }
             });
-
-            for (var row in data)
-            {
-                var document = {};
-
-                for (var column in data[row])
-                {
-                    if (column == '_guid')
-                    {
-                        document[column] = data[row][column];
-                    }
-                    else if(column != '_dom')
-                    {
-                        document[column] = column + ":" + data[row][column];
-                    }
-                }
-
-                this.index.add(document);
-            }
-        }
-
-        /**
-         * Using Lunr.js we search the Table for the supplied Terms.
-         *
-         * If the column is set to "all" we search all columns.
-         * Otherwise this needs to be the snake case name of the column.
-         * ie: first_name or col_1 depending on how the table is serialised.
-         *
-         * To reset the table supply a null or empty search term.
-         */
-        public Query(terms: string, column = 'all'): void
-        {
-            // Reset table if no terms suplied
-            if (terms == null || terms == "")
-            {
-                this.ResetTable(); return;
-            }
-
-            // Create a new array of results
-            var results = new Array<lunr.IIndexSearchResult>();
-
-            if (column == 'all')
-            {
-                // Perform a search for each column
-                var headings = this.table.GetReader().GetHeadings();
-                for (var i = 0; i < headings.length; i++)
-                {
-                    if (headings[i] != '_guid' && headings[i] != '_dom')
-                    {
-                        results = $.merge
-                        (
-                            results,
-                            this.index.search(headings[i] + ":" + terms)
-                        );
-                    }
-                }
-
-                // Sort the results
-                results.sort(function(a, b)
-                {
-                    return b['score'] - a['score'];
-                });
-
-                // Remove duplicates
-                // TODO: I'm sure there must be a better way to do this...
-                var resultsNew = new Array<lunr.IIndexSearchResult>();
-                for (var key in results)
-                {
-                    var found = false;
-
-                    for (var key2 in resultsNew)
-                    {
-                        if (results[key].ref === resultsNew[key2].ref)
-                        {
-                            found = true; break;
-                        }
-                    }
-
-                    if (!found) resultsNew.push(results[key]);
-                }
-                results = resultsNew;
-            }
-            else
-            {
-                // Just do one search for the specfied column
-                results = this.index.search(column + ":" + terms);
-            }
-
-            // Redraw the table
-            var rows = new Array<Element>();
-
-            for (var result in results)
-            {
-                for (var row in this.originalTable)
-                {
-                    if (results[result].ref == this.originalTable[row]['_guid'])
-                    {
-                        rows.push(this.originalTable[row]["_dom"]);
-                    }
-                }
-            }
-
-            this.container.find('.tbody').empty().append(rows);
-
-            // To make the sorter work on this new dataset
-            // we need to restort to this hack. I'm not 100%
-            // happy with this but it does the job for now.
-            this.table.GetReader().Serialize();
-
-            // Reset the sorter icons
-            var icons = this.container.find('.thead i');
-            icons.removeClass('fa-sort-asc');
-            icons.removeClass('fa-sort-desc');
-            icons.addClass('fa-sort');
-        }
-
-        public ResetTable(): void
-        {
-            var rows = new Array<Element>();
-
-            for (var key in this.originalTable)
-            {
-                rows.push(this.originalTable[key]["_dom"]);
-            }
-
-            this.container.find('.tbody').empty().append(rows);
-
-            this.table.GetReader().Serialize();
-            
-            var icons = this.container.find('.thead i');
-            icons.removeClass('fa-sort-asc');
-            icons.removeClass('fa-sort-desc');
-            icons.addClass('fa-sort');
         }
     }
 }

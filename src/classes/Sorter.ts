@@ -22,12 +22,12 @@ module SexyTable
         /**
          * The main container for the entire table.
          */
-        private container: JQuery;
+        protected container: JQuery;
 
         /**
          * Makes the natural sort algorithm ignore case.
          */
-        private caseInsensitive = true;
+        protected caseInsensitive = true;
 
         /**
          * Give us the tables top level container element.
@@ -42,7 +42,23 @@ module SexyTable
             this.InsertSortableToggles();
         }
 
-        private EnsureTableHasThead(): void
+        /**
+         * In some cases, other features such as the Searcher may redraw the
+         * table with new rows. And thus any sorting UI needs to be reset to
+         * default.
+         */
+        public ResetSortIcons(): void
+        {
+            var icons = this.container.find('.thead i');
+            icons.removeClass('fa-sort-asc');
+            icons.removeClass('fa-sort-desc');
+            icons.addClass('fa-sort');
+        }
+
+        /**
+         * Sortable tables rely on the thead and tbody containers!
+         */
+        protected EnsureTableHasThead(): void
         {
             if (this.container.find('.thead, .tbody').length != 2)
             {
@@ -53,7 +69,14 @@ module SexyTable
             }
         }
 
-        private InsertSortableToggles(): void
+        /**
+         * This will create an <i> element for each thead cell.
+         * The <i> element will be given apprioriate Font Awesome icon classes.
+         * Thus it's important that Font Awesome is loaded when using sortable
+         * tables. No checks are done you just won't see any sort icons if you
+         * forget to include Font Awersome.
+         */
+        protected InsertSortableToggles(): void
         {
             var that = this;
 
@@ -74,7 +97,10 @@ module SexyTable
             );
         }
 
-        private OnSort(cell: Element): void
+        /**
+         * Callback for the thead cells click event.
+         */
+        protected OnSort(cell: Element): void
         {
             // What state of sorting are we currently in?
             // We use the fa icon to tell us that.
@@ -110,55 +136,42 @@ module SexyTable
             switch(sortState)
             {
                 case 'asc':
-
-                    this.ReDrawTable
-                    (
-                        this.newTableData()
-                            .sort(this.sortByKey
-                            (
-                                $(cell).text().toLowerCase().replace(" ", "_")
-                            ))
-                    );
-
+                    this.table.Redraw(this.SortTable(cell));
                 break;
 
                 case 'desc':
-
-                    this.ReDrawTable
-                    (
-                        this.newTableData()
-                            .sort(this.sortByKey
-                            (
-                                $(cell).text().toLowerCase().replace(" ", "_")
-                            ))
-                            .reverse()
-                    );
-
+                    this.table.Redraw(this.SortTable(cell, true));
                 break;
 
                 default:
-                    this.ReDrawTable(this.table.GetReader().GetSerialized());
+                    this.table.Redraw(this.table.GetReader().GetSerialized());
             }
         }
 
-        private ReDrawTable(data: Object): void
+        /**
+         * Given a column we will sort the table based on that column.
+         */
+        protected SortTable(cell: Element, reverse = false): Array<Object>
         {
-            var rows = new Array<Element>();
+            // Get the column name
+            var column = $(cell).text().toLowerCase().replace(" ", "_");
 
-            for (var row in data)
-            {
-                rows.push(data[row]["_dom"]);
-            }
+            // Create a copy of the table rows that we can then sort
+            var rows = this.table.GetReader().GetSerialized().slice(0);
 
-            this.container.find('.tbody').empty().append(rows);
+            // Sort the rows
+            rows.sort(this.sortByKey(column));
+
+            // Reverse the sort if need be
+            if (reverse) rows.reverse();
+
+            return rows;
         }
 
-        private newTableData(): Array<Object>
-        {
-            return this.table.GetReader().GetSerialized().slice(0);
-        }
-
-        private sortByKey(key)
+        /**
+         * Allows us to sort by an objects key.
+         */
+        protected sortByKey(key)
         {
             var that = this;
 
@@ -174,7 +187,7 @@ module SexyTable
          * @author Jim Palmer (based on chunking idea from Dave Koelle)
          * @see https://github.com/overset/javascript-natural-sort
          */
-        private naturalSort(a: any, b: any): number
+        protected naturalSort(a: any, b: any): number
         {
             var re = /(^([+\-]?(?:\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?)?$|^0x[\da-fA-F]+$|\d+)/g,
                 sre = /^\s+|\s+$/g,   // trim pre-post whitespace

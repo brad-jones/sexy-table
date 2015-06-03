@@ -61,6 +61,12 @@
 
             // We actually use some of the built in table styles.
             // This enables the vertical align trick below.
+            //
+            // NOTE: That because the li is no longer a block element and has
+            // table like properties. When it's width becomes smaller enough for
+            // it's content to overflow the layout will break. This is where we
+            // need to use media queries to for example make the font size
+            // smaller.
             display: table;
 
             // Each cell gets an inner container inserted into it by the js.
@@ -112,7 +118,7 @@
             {
                 // Because we make the entire cell clickable for sorting
                 // the user can easily select text and looks ugly, this
-                // stops the heading text from being selected. 
+                // stops the heading text from being selected.
                 -webkit-touch-callout: none;
                 -webkit-user-select: none;
                 -khtml-user-select: none;
@@ -124,6 +130,17 @@
                 {
                     padding-left: 5px;
                 }
+            }
+        }
+    }
+
+    &.filterable
+    {
+        .thead
+        {
+            input
+            {
+                width:100%;
             }
         }
     }
