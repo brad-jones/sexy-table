@@ -33,6 +33,8 @@ module SexyTable
          */
         protected perColIndex: lunr.Index;
 
+        protected serverCb: Function;
+
         /**
          * Ties us to an instance of a Table.
          * Sets up the container shortcut.
@@ -46,6 +48,11 @@ module SexyTable
             this.BuildIndexes();
         }
 
+        public UseServer(serverCb: Function): void
+        {
+            this.serverCb = serverCb;
+        }
+
         /**
          * Using Lunr.js we search the Table for the supplied Terms.
          *
@@ -57,10 +64,17 @@ module SexyTable
          */
         public Query(terms: string, column = 'all'): void
         {
-            // Reset table if no terms suplied
+            // Reset table if no terms supplied
             if (terms == null || terms == "")
             {
-                this.ResetTable(); return;
+                this.table.Reset(); return;
+            }
+
+            // If we have a server callback let's use it instead.
+            if (this.serverCb != null)
+            {
+                this.serverCb(column, terms);
+                return;
             }
 
             // Lets grab some results from Lunr
@@ -90,19 +104,6 @@ module SexyTable
 
             // Redraw the table
             this.table.Redraw(matches, true);
-            try { this.table.GetSorter().ResetSortIcons(); }
-            catch (e){}
-        }
-
-        /**
-         * After a Search Query has been performed
-         * we need a way to go back to the original table.
-         */
-        public ResetTable(): void
-        {
-            this.table.Reset();
-            try { this.table.GetSorter().ResetSortIcons(); }
-            catch (e){}
         }
 
         /**
@@ -127,7 +128,7 @@ module SexyTable
          *
          * @see https://goo.gl/1Ao45P
          */
-        protected BuildIndexes(): void
+        public BuildIndexes(): void
         {
             // Build the schema's for both indexes
             this.index = this.BuildIndexSchema();

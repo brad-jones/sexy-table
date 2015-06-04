@@ -29,6 +29,8 @@ module SexyTable
          */
         protected caseInsensitive = true;
 
+        protected serverCb: Function;
+
         /**
          * Give us the tables top level container element.
          * And we will add some sort controls to the tables first row.
@@ -53,6 +55,11 @@ module SexyTable
             icons.removeClass('fa-sort-asc');
             icons.removeClass('fa-sort-desc');
             icons.addClass('fa-sort');
+        }
+
+        public UseServer(serverCb: Function): void
+        {
+            this.serverCb = serverCb;
         }
 
         /**
@@ -135,6 +142,21 @@ module SexyTable
             // Now sort the table data and re draw the table
             switch(sortState)
             {
+                case 'asc':
+                case 'desc':
+                    
+                    // If we have a server callback let's use it instead.
+                    if (this.serverCb != null)
+                    {
+                        this.serverCb
+                        (
+                            $(cell).text().toLowerCase().replace(" ", "_"),
+                            sortState
+                        );
+
+                        return;
+                    }
+
                 case 'asc':
                     this.table.Redraw(this.SortTable(cell));
                 break;

@@ -67,7 +67,7 @@ module SexyTable
          * > once. And then call GetSerialized() which will in effect cache the
          * > results for you.
          */
-        public Serialize(): Array<Object>
+        public Serialize(updateOriginal = false): Array<Object>
         {
             this.serialized = [];
 
@@ -82,7 +82,46 @@ module SexyTable
                 this.container.find('.tbody ul').each(this.AddRow.bind(this));
             }
 
+            if (updateOriginal) this.original = this.serialized.slice(0);
+
             return this.serialized;
+        }
+
+        /**
+         * Returns a JSON string representation of the table ready to be sent
+         * via AJAX. Basically this removes the _dom and _guid properties.
+         */
+        public ToJson(cache = true): string
+        {
+            var data, jsonArray = [];
+
+            if (cache)
+            {
+                data = this.serialized;
+            }
+            else
+            {
+                data = this.Serialize();
+            }
+
+            for (var i = 0; i < data.length; i++)
+            {
+                var row = {};
+
+                for (var key in data[i])
+                {
+                    if (key != '_dom' && key != '_guid')
+                    {
+                        row[key] = data[i][key];
+                    }
+                }
+
+                jsonArray.push(row);
+            }
+
+            console.log(jsonArray);
+
+            return JSON.stringify(jsonArray);
         }
 
         /**

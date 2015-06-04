@@ -32,7 +32,26 @@ module SexyTable
         protected reader: Reader;
         public GetReader(): Reader
         {
+            if (this.reader == null)
+            {
+                throw new Error('Table Reader not yet created!');
+            }
+
             return this.reader;
+        }
+
+        /**
+         * The instance of the Writer for this Table.
+         */
+        protected writer: Writer;
+        public GetWriter(): Writer
+        {
+            if (this.writer == null)
+            {
+                throw new Error('Table is not Writeable! Use MakeWriteable.');
+            }
+
+            return this.writer;
         }
 
         /**
@@ -41,6 +60,11 @@ module SexyTable
         protected sizer: Sizer;
         public GetSizer(): Sizer
         {
+            if (this.sizer == null)
+            {
+                throw new Error('Table Sizer not yet created!');
+            }
+
             return this.sizer;
         }
 
@@ -87,6 +111,20 @@ module SexyTable
         }
 
         /**
+         * The instance of the Pager for this Table.
+         */
+        protected pager: Pager;
+        public GetPager(): Pager
+        {
+            if (this.pager == null)
+            {
+                throw new Error('Table is not Pageable! Use MakePageable.');
+            }
+
+            return this.pager;
+        }
+
+        /**
          * Give us the tables top level container element.
          * Eg: <div class="sexy-table"></div>
          */
@@ -96,6 +134,20 @@ module SexyTable
 
             // Assign ourself to the table DOM data for easy retrieval
             this.container.data('sexy-table', this);
+
+            // Automatically make the table writeable if Transparency
+            // is loaded and it contains a data bind template.
+            if (typeof Transparency != 'undefined')
+            {
+                if (this.container.find('.tbody[data-bind]').length == 1)
+                {
+                    this.MakeWriteable();
+
+                    // Bail out at this point there is no point continuing
+                    // because the table only contains a template and no data.
+                    return;
+                }
+            }
 
             // It's important this runs early on as pretty much
             // everything else assumes this has been done.
@@ -119,7 +171,7 @@ module SexyTable
 
             // Up until this point the table will be hidden from view by css.
             // The sizer will automatically calculate the width of the height
-            // of the table cells and this show the table.
+            // of the table cells and then show the table.
             this.sizer = new Sizer(this);
 
             // Automatically make the table searchable if Lunr has been loaded.
@@ -130,12 +182,70 @@ module SexyTable
         }
 
         /**
-         * This must be done before the Sorter is initialised but the Sorter
-         * can not run after the SizeCalculator thus we run it here.
+         * Creates a new Pager for the table.
+         * This allows the table to interact with a server backend.
          */
-        protected InsertCellWrapper(): void
+        public MakePageable(nextCb: Function): void
         {
-            this.container.find('li').wrapInner('<div class="inner"></div>');
+            if (this.pager != null) return;
+
+            // Pageable tables must be writeable
+            this.MakeWriteable();
+
+            this.pager = new Pager(this, nextCb);
+        }
+
+        /**
+         * Create a new Writer for the table.
+         * This will allow tables to be created at runtime from JSON,
+         * instead of existing HTML Markup.
+         */
+        public MakeWriteable(): void
+        {
+            if (this.writer != null) return;
+
+            if (typeof Transparency == 'undefined')
+            {
+                throw new Error
+                (
+                    'Writeable tables require transparency.js '+
+                    'see: http://leonidas.github.io/transparency/'
+                );
+            }
+
+            if (this.container.find('.tbody[data-bind]').length == 0)
+            {
+                throw new Error
+                (
+                    'Writeable tables require a tbody container '+
+                    'that contains a transparency template.'
+                );
+            }
+
+            this.writer = new Writer(this);
+        }
+
+        /**
+         * Each LI element represents a cell of the table.
+         * However for various styling reasons we need to insert an inner
+         * container. Unsemantic markup is one of my pet hates thus we do
+         * this using javascript.
+         */
+        public InsertCellWrapper(): void
+        {
+            this.container.find('li').each(function(index, cell)
+            {
+                // Ensure we don't wrap an inner container
+                // with another inner container.
+                if ($(cell).find('.inner').length == 0)
+                {
+                    // Don't wrap anything inside the data bind template
+                    if ($(cell).parents('.data-bind-template').length == 0)
+                    {
+                        $(cell).wrapInner('<div class="inner"></div>');
+                    }
+                }
+            });
         }
 
         /**
@@ -234,7 +344,15 @@ module SexyTable
 
             this.container.find('.tbody').empty().append(elements);
 
-            if (reSerialize) this.reader.Serialize();
+            this.InsertCellWrapper();
+
+            this.sizer.ForceResize();
+
+            if (reSerialize)
+            {
+                this.reader.Serialize();
+                try { this.GetSorter().ResetSortIcons(); } catch(e) {}
+            }
         }
 
         /**
@@ -244,6 +362,52 @@ module SexyTable
         public Reset(): void
         {
             this.Redraw(this.reader.GetOriginal(), true);
+            try { this.GetFilterer().ResetFilters(); } catch(e) {}
+        }
+
+        /**
+         * When new data has been added to the table,
+         * you may call this to rerun the table initialisation.
+         */
+        public Refresh(quick = false): void
+        {
+            this.InsertCellWrapper();
+
+            try { this.GetReader().Serialize(true); }
+            catch (e) { this.reader = new Reader(this); }
+
+            try { this.GetSizer().ForceResize(); }
+            catch (e) { this.sizer = new Sizer(this); }
+
+            if (!quick)
+            {
+                try { this.GetSorter().ResetSortIcons(); }
+                catch (e)
+                {
+                    if (this.container.hasClass('sortable'))
+                    {
+                        this.MakeSortable();
+                    }
+                }
+
+                try { this.GetFilterer().ResetFilters(); }
+                catch (e)
+                {
+                    if (this.container.hasClass('filterable'))
+                    {
+                        this.MakeFilterable();
+                    }
+                }
+
+                try { this.GetSearcher().BuildIndexes(); }
+                catch (e)
+                {
+                    if (typeof lunr != 'undefined')
+                    {
+                        this.MakeSearchable();
+                    }
+                }
+            }
         }
     }
 }

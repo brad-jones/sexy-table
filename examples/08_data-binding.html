@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Sexy Table - Serialise Write Example</title>
+        <title>Sexy Table - Data Binding Example</title>
         <link rel="stylesheet" href="../node_modules/normalize.css/normalize.css" />
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="../dist/SexyTable.css" />
         <script src="../node_modules/jquery/dist/jquery.js"></script>
+        <script src="../node_modules/lunr/lunr.js"></script>
         <script src="../node_modules/transparency/dist/transparency.min.js"></script>
         <!--[if lt IE 9]><script src="../node_modules/lt-ie-9/lt-ie-9.js"></script><![endif]-->
         <script src="../dist/SexyTable.js"></script>
@@ -22,7 +24,7 @@
         <div class="container">
             <h1>Users</h1>
             <hr>
-            <div class="sexy-table">
+            <div class="sexy-table sortable filterable">
                 <div class="thead">
                     <ul>
                         <li>First Name</li>
@@ -47,19 +49,12 @@
             </div>
             <script>
 
-                /** @see http://leonidas.github.io/transparency/ **/
+                $(document).ready(function()
+                {
+                    var table = $('.sexy-table').data('sexy-table');
 
-                $('.sexy-table').render
-                (
-                    {
-                        users:
-                        [
-                            {id: 1, first_name: 'Brad', last_name: 'Jones', group: 'Administrators', last_login: '01/01/2015 09:00:00'},
-                            {id: 2, first_name: 'Foo', last_name: 'Bar', group: 'Users', last_login: '01/01/2015 10:00:00'},
-                            {id: 3, first_name: 'Fred', last_name: 'Bob', group: 'User', last_login: '01/01/2015 11:00:00'},
-                        ]
-                    },
-                    {
+                    table.GetWriter().SetDirectives
+                    ({
                         "users":
                         {
                             "user":
@@ -70,8 +65,32 @@
                                 }
                             }
                         }
-                    }
-                );
+                    });
+
+                    table.GetWriter().Append
+                    ({
+                        users:
+                        [
+                            {id: 1, first_name: 'Brad', last_name: 'Jones', group: 'Administrators', last_login: '01/01/2015 09:00:00'},
+                            {id: 2, first_name: 'Foo', last_name: 'Bar', group: 'Users', last_login: '01/01/2015 10:00:00'},
+                            {id: 3, first_name: 'Fred', last_name: 'Bob', group: 'User', last_login: '01/01/2015 11:00:00'},
+                        ]
+                    });
+                    
+                    setTimeout(function()
+                    {
+                        table.GetWriter().Append
+                        ({
+                            users:
+                            [
+                                {id: 4, first_name: 'John', last_name: 'Jones', group: 'Administrators', last_login: '02/01/2015 09:00:00'},
+                                {id: 5, first_name: 'Bill', last_name: 'Blogs', group: 'Users', last_login: '03/01/2015 10:00:00'},
+                                {id: 6, first_name: 'Some', last_name: 'Dude', group: 'User', last_login: '04/01/2015 11:00:00'},
+                            ]
+                        });
+                    }, 3000);
+                });
+
             </script>
         </div>
     </body>

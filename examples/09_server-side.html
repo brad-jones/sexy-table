@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sexy Table - Server Side Example</title>
+        <link rel="stylesheet" href="../node_modules/normalize.css/normalize.css" />
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="../dist/SexyTable.css" />
+        <script src="../node_modules/jquery/dist/jquery.js"></script>
+        <script src="../node_modules/lunr/lunr.js"></script>
+        <script src="../node_modules/transparency/dist/transparency.min.js"></script>
+        <!--[if lt IE 9]><script src="../node_modules/lt-ie-9/lt-ie-9.js"></script><![endif]-->
+        <script src="../dist/SexyTable.js"></script>
+        <style type="text/css">
+            .container
+            {
+                width: 50%;
+                margin-top: 50px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Users</h1>
+            <hr>
+            <div class="sexy-table sortable filterable">
+                <div class="thead">
+                    <ul>
+                        <li>First Name</li>
+                        <li>Last Name</li>
+                        <li>Group</li>
+                        <li>Last Login</li>
+                        <li></li>
+                    </ul>
+                </div>
+                <div class="tbody" data-bind="users">
+                    <ul data-bind="user">
+                        <li data-bind="first_name"></li>
+                        <li data-bind="last_name"></li>
+                        <li data-bind="group"></li>
+                        <li data-bind="last_login"></li>
+                        <li>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <script>
+
+                /**
+                 * Up until now all sorting, filtering & searching has been done
+                 * client side. This is great for relatively small sets of data.
+                 * The user experience is fantastic and super fast.
+                 *
+                 * But when we have massive data sets, this won't work.
+                 * In this example we introduce the Pager, this is key to
+                 * working with Server Side data.
+                 */
+
+                $(document).ready(function()
+                {
+                    // Grab the table
+                    var table = $('.sexy-table').data('sexy-table');
+
+                    // Setup the pager
+                    table.MakePageable(function(rows, sorted, searched, callback)
+                    {
+                        console.log('ROWS: ' + rows);
+                        console.log('SORTED'); console.log(sorted);
+                        console.log('SEARCHED'); console.log(searched);
+                        console.log('--------------------------------');
+
+                        // rows is a simple count of the number of rows
+                        //
+                        // sorted is either null or an object
+                        // that looks like:
+                        // {
+                        //      column: 'first_name',
+                        //      direction: 'asc'
+                        // }
+                        //
+                        // searched is either null or an object
+                        // that looks like:
+                        // {
+                        //      query: 'Brad',
+                        //      column: 'first_name || all'
+                        // }
+                        //
+                        // The idea is that you pass these values
+                        // on to the server however you server API is setup.
+                        // For now we will simulate the AJAX request.
+                        setTimeout(function()
+                        {
+                            // Some data that we pretend came from the server.
+                            // The data has been searched and sorted for us.
+                            var response =
+                            {
+                                users:
+                                [
+                                    {first_name: ++rows, last_name: 'Jones', group: 'Administrators', last_login: '01/01/2015 09:00:00'},
+                                    {first_name: ++rows, last_name: 'Bar', group: 'Users', last_login: '01/01/2015 10:00:00'},
+                                    {first_name: ++rows, last_name: 'Bob', group: 'User', last_login: '01/01/2015 11:00:00'},
+                                    {first_name: ++rows, last_name: 'Jones', group: 'Administrators', last_login: '01/01/2015 09:00:00'},
+                                    {first_name: ++rows, last_name: 'Bar', group: 'Users', last_login: '01/01/2015 10:00:00'},
+                                    {first_name: ++rows, last_name: 'Bob', group: 'User', last_login: '01/01/2015 11:00:00'},
+                                    {first_name: ++rows, last_name: 'Jones', group: 'Administrators', last_login: '01/01/2015 09:00:00'},
+                                    {first_name: ++rows, last_name: 'Bar', group: 'Users', last_login: '01/01/2015 10:00:00'},
+                                    {first_name: ++rows, last_name: 'Bob', group: 'User', last_login: '01/01/2015 11:00:00'},
+                                    {first_name: ++rows, last_name: 'Jones', group: 'Administrators', last_login: '01/01/2015 09:00:00'}
+                                ]
+                            };
+
+                            // Pass the response back to the Pager
+                            callback(response);
+
+                            // NOTE: If response is an empty array.
+                            // The pager will assume there are no more records.
+                            // And stop attempting to load more records.
+
+                        }, 500);
+                    });
+                });
+
+            </script>
+        </div>
+    </body>
+</html>

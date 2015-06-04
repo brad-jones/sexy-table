@@ -35,6 +35,11 @@ module SexyTable
             this.InsertFilterInputs();
         }
 
+        public ResetFilters(): void
+        {
+            this.container.find('.thead input').val('');
+        }
+
         /**
          * Filterable tables rely on the thead and tbody containers!
          */
