@@ -70,6 +70,7 @@ var SexyTable;
             this.nextCb = nextCb;
             this.FirstPage = false;
             this.rows = 0;
+            this.atEnd = false;
             this.container = this.table.GetContainer();
             if (this.container.find('.tbody').is(':empty')) {
                 this.FirstPage = true;
@@ -78,18 +79,25 @@ var SexyTable;
             $(window).scroll(this.OnScroll.bind(this));
         }
         Pager.prototype.OnScroll = function () {
-            if ($(window).scrollTop() + $(window).height() == $(document).height()) {
+            if (this.atEnd)
+                return;
+            var docHeight = $(document).height();
+            var windowHeight = $(window).height();
+            var scrollTop = $(window).scrollTop();
+            if (scrollTop + windowHeight == docHeight) {
                 this.rows = this.container.find('.tbody ul').length;
                 this.GetNext();
             }
         };
         Pager.prototype.OnSort = function (column, direction) {
             this.rows = 0;
+            this.atEnd = false;
             this.sort = { 'column': column, 'direction': direction };
             this.GetNext();
         };
         Pager.prototype.OnSearch = function (column, terms) {
             this.rows = 0;
+            this.atEnd = false;
             this.search = { 'column': column, 'terms': terms };
             this.GetNext();
         };
@@ -97,6 +105,10 @@ var SexyTable;
             this.nextCb(this.rows, this.sort, this.search, this.OnResponse.bind(this));
         };
         Pager.prototype.OnResponse = function (response) {
+            if (response == null) {
+                this.atEnd = true;
+                return;
+            }
             if (this.rows == 0) {
                 this.table.GetWriter().Replace(response);
             }
@@ -170,7 +182,6 @@ var SexyTable;
                 }
                 jsonArray.push(row);
             }
-            console.log(jsonArray);
             return JSON.stringify(jsonArray);
         };
         Reader.prototype.ExtractHeadings = function () {
@@ -217,6 +228,11 @@ var SexyTable;
             this.EnsureTableHasThead();
             this.BuildIndexes();
         }
+        Searcher.prototype.EnsureTableHasThead = function () {
+            if (this.container.find('.thead, .tbody').length != 2) {
+                throw new Error('Searchable tables MUST use .thead and .tbody containers!');
+            }
+        };
         Searcher.prototype.UseServer = function (serverCb) {
             this.serverCb = serverCb;
         };
@@ -246,14 +262,12 @@ var SexyTable;
                     }
                 }
             }
+            matches = this.table.GetSorter().Sort(matches);
             this.table.Redraw(matches, true);
         };
-        Searcher.prototype.EnsureTableHasThead = function () {
-            if (this.container.find('.thead, .tbody').length != 2) {
-                throw new Error('Searchable tables MUST use .thead and .tbody containers!');
-            }
-        };
         Searcher.prototype.BuildIndexes = function () {
+            if (this.serverCb != null)
+                return;
             this.index = this.BuildIndexSchema();
             this.perColIndex = this.BuildIndexSchema();
             var data = this.table.GetReader().GetSerialized();
@@ -364,19 +378,40 @@ var SexyTable;
             this.EnsureTableHasThead();
             this.InsertSortableToggles();
         }
+        Sorter.prototype.EnsureTableHasThead = function () {
+            if (this.container.find('.thead, .tbody').length != 2) {
+                throw new Error('Sortable tables MUST use .thead and .tbody containers!');
+            }
+        };
+        Sorter.prototype.UseServer = function (serverCb) {
+            this.serverCb = serverCb;
+        };
         Sorter.prototype.ResetSortIcons = function () {
             var icons = this.container.find('.thead i');
             icons.removeClass('fa-sort-asc');
             icons.removeClass('fa-sort-desc');
             icons.addClass('fa-sort');
         };
-        Sorter.prototype.UseServer = function (serverCb) {
-            this.serverCb = serverCb;
-        };
-        Sorter.prototype.EnsureTableHasThead = function () {
-            if (this.container.find('.thead, .tbody').length != 2) {
-                throw new Error('Sortable tables MUST use .thead and .tbody containers!');
+        Sorter.prototype.Sort = function (rows) {
+            var column, sortState;
+            this.container.find('.thead i').each(function (index, element) {
+                if ($(element).hasClass('fa-sort-asc')) {
+                    sortState = 'asc';
+                }
+                else if ($(element).hasClass('fa-sort-desc')) {
+                    sortState = 'desc';
+                }
+                if (sortState != null) {
+                    column = $(element).parent().text().toLowerCase().replace(" ", "_");
+                    return false;
+                }
+            });
+            if (sortState != null) {
+                rows.sort(this.sortByKey(column));
+                if (sortState == 'desc')
+                    rows.reverse();
             }
+            return rows;
         };
         Sorter.prototype.InsertSortableToggles = function () {
             var that = this;
@@ -409,13 +444,11 @@ var SexyTable;
             otherIcons.removeClass('fa-sort-asc');
             otherIcons.removeClass('fa-sort-desc');
             otherIcons.addClass('fa-sort');
+            if (this.serverCb != null) {
+                this.serverCb($(cell).text().toLowerCase().replace(" ", "_"), sortState);
+                return;
+            }
             switch (sortState) {
-                case 'asc':
-                case 'desc':
-                    if (this.serverCb != null) {
-                        this.serverCb($(cell).text().toLowerCase().replace(" ", "_"), sortState);
-                        return;
-                    }
                 case 'asc':
                     this.table.Redraw(this.SortTable(cell));
                     break;
@@ -620,25 +653,23 @@ var SexyTable;
             this.container.find('.tbody').empty().append(elements);
             this.InsertCellWrapper();
             this.sizer.ForceResize();
-            if (reSerialize) {
+            if (reSerialize)
                 this.reader.Serialize();
-                try {
-                    this.GetSorter().ResetSortIcons();
-                }
-                catch (e) {
-                }
-            }
         };
         Table.prototype.Reset = function () {
             this.Redraw(this.reader.GetOriginal(), true);
+            try {
+                this.GetSorter().ResetSortIcons();
+            }
+            catch (e) {
+            }
             try {
                 this.GetFilterer().ResetFilters();
             }
             catch (e) {
             }
         };
-        Table.prototype.Refresh = function (quick) {
-            if (quick === void 0) { quick = false; }
+        Table.prototype.Refresh = function () {
             this.InsertCellWrapper();
             try {
                 this.GetReader().Serialize(true);
@@ -646,36 +677,24 @@ var SexyTable;
             catch (e) {
                 this.reader = new SexyTable.Reader(this);
             }
+            if (this.sorter == null && this.container.hasClass('sortable')) {
+                this.MakeSortable();
+            }
+            if (this.filterer == null && this.container.hasClass('filterable')) {
+                this.MakeFilterable();
+            }
             try {
                 this.GetSizer().ForceResize();
             }
             catch (e) {
                 this.sizer = new SexyTable.Sizer(this);
             }
-            if (!quick) {
-                try {
-                    this.GetSorter().ResetSortIcons();
-                }
-                catch (e) {
-                    if (this.container.hasClass('sortable')) {
-                        this.MakeSortable();
-                    }
-                }
-                try {
-                    this.GetFilterer().ResetFilters();
-                }
-                catch (e) {
-                    if (this.container.hasClass('filterable')) {
-                        this.MakeFilterable();
-                    }
-                }
-                try {
-                    this.GetSearcher().BuildIndexes();
-                }
-                catch (e) {
-                    if (typeof lunr != 'undefined') {
-                        this.MakeSearchable();
-                    }
+            try {
+                this.GetSearcher().BuildIndexes();
+            }
+            catch (e) {
+                if (typeof lunr != 'undefined') {
+                    this.MakeSearchable();
                 }
             }
         };
@@ -698,9 +717,6 @@ var SexyTable;
             this.directives = value;
         };
         Writer.prototype.Append = function (viewmodel, directives) {
-            if (!this.container.find('.tbody').is(':empty')) {
-                this.table.Reset();
-            }
             var template = this.container.find('.data-bind-template');
             template.render(viewmodel, directives == null ? this.directives : directives);
             var newData = template.children('div').children().clone();
