@@ -5,9 +5,9 @@ __A good looking HTML5 table that's not a table :)__
 This project is a concept that I will be using in an up coming commercial
 project that I am involved with. I was looking for a client side component like:
 
-    - https://www.datatables.net/
-    - http://www.jtable.org/
-    - http://www.dynatable.com/
+- https://www.datatables.net/
+- http://www.jtable.org/
+- http://www.dynatable.com/
 
 I wanted a table that was sortable, filterable, searchable and pageable.
 I also had a design to follow that called for various fancy drop shadows,
