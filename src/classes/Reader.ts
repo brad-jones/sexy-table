@@ -119,8 +119,6 @@ module SexyTable
                 jsonArray.push(row);
             }
 
-            console.log(jsonArray);
-
             return JSON.stringify(jsonArray);
         }
 
