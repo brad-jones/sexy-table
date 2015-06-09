@@ -33,6 +33,11 @@ module SexyTable
          */
         protected perColIndex: lunr.Index;
 
+        /**
+         * Instead of using Lunr for searching, we can hookup the Searcher
+         * to a server backend. See the "Pager" for more details about working
+         * with a server backend.
+         */
         protected serverCb: Function;
 
         /**
@@ -48,6 +53,34 @@ module SexyTable
             this.BuildIndexes();
         }
 
+        /**
+         * Searchable tables rely on the thead and tbody containers!
+         */
+        protected EnsureTableHasThead(): void
+        {
+            if (this.container.find('.thead, .tbody').length != 2)
+            {
+                throw new Error
+                (
+                    'Searchable tables MUST use .thead and .tbody containers!'
+                );
+            }
+        }
+
+        /**
+         * Tells us to redirect all search requests to your callback.
+         * Lunr.js is no longer used for searching. See the "Pager" for more
+         * details about working with a server backend.
+         *
+         * > TODO: When the Searcher is told to use a searcher backend
+         * > it still requires Lunr.js to be loaded. Need to move the dependancy
+         * > check to somewhere later on in the pipeline.
+         *
+         * > NOTE: I have had ideas about some sort of hybrid client side and
+         * > server side searching solution, where the lunr search would be
+         * > used as a cache of sorts but I haven't had a chance to develop my
+         * > thoughts any further.
+         */
         public UseServer(serverCb: Function): void
         {
             this.serverCb = serverCb;
@@ -73,8 +106,7 @@ module SexyTable
             // If we have a server callback let's use it instead.
             if (this.serverCb != null)
             {
-                this.serverCb(column, terms);
-                return;
+                this.serverCb(column, terms); return;
             }
 
             // Lets grab some results from Lunr
@@ -102,22 +134,11 @@ module SexyTable
                 }
             }
 
+            // Maintain any current sort state
+            matches = this.table.GetSorter().Sort(matches);
+
             // Redraw the table
             this.table.Redraw(matches, true);
-        }
-
-        /**
-         * Searchable tables rely on the thead and tbody containers!
-         */
-        protected EnsureTableHasThead(): void
-        {
-            if (this.container.find('.thead, .tbody').length != 2)
-            {
-                throw new Error
-                (
-                    'Searchable tables MUST use .thead and .tbody containers!'
-                );
-            }
         }
 
         /**
@@ -130,6 +151,9 @@ module SexyTable
          */
         public BuildIndexes(): void
         {
+            // Bail out if we have been told to use a server for all searching.
+            if (this.serverCb != null) return;
+
             // Build the schema's for both indexes
             this.index = this.BuildIndexSchema();
             this.perColIndex = this.BuildIndexSchema();

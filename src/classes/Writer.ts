@@ -53,13 +53,6 @@ module SexyTable
          */
         public Append(viewmodel: Object, directives?: Object): void
         {
-            // Before we do anything lets, reset the table to it's
-            // original state to ensure sorting works as expected.
-            if (!this.container.find('.tbody').is(':empty'))
-            {
-                this.table.Reset();
-            }
-
             // Grab the template
             var template = this.container.find('.data-bind-template');
 

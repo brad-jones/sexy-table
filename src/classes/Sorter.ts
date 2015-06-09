@@ -29,6 +29,11 @@ module SexyTable
          */
         protected caseInsensitive = true;
 
+        /**
+         * Instead of performing sorting in the client we can defer the job to
+         * a server backend. See the "Pager" for more details about working
+         * with a server backend.
+         */
         protected serverCb: Function;
 
         /**
@@ -45,6 +50,30 @@ module SexyTable
         }
 
         /**
+         * Sortable tables rely on the thead and tbody containers!
+         */
+        protected EnsureTableHasThead(): void
+        {
+            if (this.container.find('.thead, .tbody').length != 2)
+            {
+                throw new Error
+                (
+                    'Sortable tables MUST use .thead and .tbody containers!'
+                );
+            }
+        }
+
+        /**
+         * Tells us to redirect all sort requests to your callback.
+         * The natural sort alograthim included in the class is no longer used.
+         * See the "Pager" for more details about working with a server backend.
+         */
+        public UseServer(serverCb: Function): void
+        {
+            this.serverCb = serverCb;
+        }
+
+        /**
          * In some cases, other features such as the Searcher may redraw the
          * table with new rows. And thus any sorting UI needs to be reset to
          * default.
@@ -57,23 +86,44 @@ module SexyTable
             icons.addClass('fa-sort');
         }
 
-        public UseServer(serverCb: Function): void
-        {
-            this.serverCb = serverCb;
-        }
-
         /**
-         * Sortable tables rely on the thead and tbody containers!
+         * Given a set of rows we will sort them. This is used by the Searcher
+         * to sort a set of matches using the current sort state.
+         *
+         * > TODO: Refactor the sorter to cache the current sort state.
          */
-        protected EnsureTableHasThead(): void
+        public Sort(rows: Array<Object>): Array<Object>
         {
-            if (this.container.find('.thead, .tbody').length != 2)
+            var column: string, sortState: string;
+
+            this.container.find('.thead i').each(function(index, element)
             {
-                throw new Error
-                (
-                    'Sortable tables MUST use .thead and .tbody containers!'
-                );
+                if ($(element).hasClass('fa-sort-asc'))
+                {
+                    sortState = 'asc';
+                }
+                else if ($(element).hasClass('fa-sort-desc'))
+                {
+                    sortState = 'desc';
+                }
+
+                if (sortState != null)
+                {
+                    column = $(element).parent().text()
+                    .toLowerCase().replace(" ", "_");
+
+                    return false;
+                }
+            });
+
+            if (sortState != null)
+            {
+                rows.sort(this.sortByKey(column));
+
+                if (sortState == 'desc') rows.reverse();
             }
+
+            return rows;
         }
 
         /**
@@ -139,24 +189,21 @@ module SexyTable
             otherIcons.removeClass('fa-sort-desc');
             otherIcons.addClass('fa-sort');
 
+            // If we have a server callback let's use it instead.
+            if (this.serverCb != null)
+            {
+                this.serverCb
+                (
+                    $(cell).text().toLowerCase().replace(" ", "_"),
+                    sortState
+                );
+
+                return;
+            }
+
             // Now sort the table data and re draw the table
             switch(sortState)
             {
-                case 'asc':
-                case 'desc':
-                    
-                    // If we have a server callback let's use it instead.
-                    if (this.serverCb != null)
-                    {
-                        this.serverCb
-                        (
-                            $(cell).text().toLowerCase().replace(" ", "_"),
-                            sortState
-                        );
-
-                        return;
-                    }
-
                 case 'asc':
                     this.table.Redraw(this.SortTable(cell));
                 break;

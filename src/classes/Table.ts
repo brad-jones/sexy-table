@@ -348,11 +348,7 @@ module SexyTable
 
             this.sizer.ForceResize();
 
-            if (reSerialize)
-            {
-                this.reader.Serialize();
-                try { this.GetSorter().ResetSortIcons(); } catch(e) {}
-            }
+            if (reSerialize) this.reader.Serialize();
         }
 
         /**
@@ -362,6 +358,7 @@ module SexyTable
         public Reset(): void
         {
             this.Redraw(this.reader.GetOriginal(), true);
+            try { this.GetSorter().ResetSortIcons(); } catch(e) {}
             try { this.GetFilterer().ResetFilters(); } catch(e) {}
         }
 
@@ -369,43 +366,49 @@ module SexyTable
          * When new data has been added to the table,
          * you may call this to rerun the table initialisation.
          */
-        public Refresh(quick = false): void
+        public Refresh(): void
         {
+            // Essure all table cells contain the inner wrapper
             this.InsertCellWrapper();
 
+            // We have added new data to the table so we need to re-read the
+            // table into the reader, updating it's "original" state if need be.
             try { this.GetReader().Serialize(true); }
             catch (e) { this.reader = new Reader(this); }
 
+            // Make the table sortable.
+            //
+            // NOTE: We do not reset the sort state and icons here as in some
+            // cases we will want to append data to the table and maintain the
+            // current sort state. ie: When Paging.
+            if (this.sorter == null && this.container.hasClass('sortable'))
+            {
+                this.MakeSortable();
+            }
+
+            // Make the table filterable.
+            //
+            // NOTE: Again we do not reset any of the filters for the same
+            // reason as the sorter.
+            if (this.filterer == null && this.container.hasClass('filterable'))
+            {
+                this.MakeFilterable();
+            }
+
+            // Force a resize of the table after adding the data
             try { this.GetSizer().ForceResize(); }
             catch (e) { this.sizer = new Sizer(this); }
 
-            if (!quick)
+            // Then we will rebuild the Lunr Indexes
+            //
+            // NOTE: When using the Pager, Lunr Indexes will not get built.
+            // No point doing work we don't need to do.
+            try { this.GetSearcher().BuildIndexes(); }
+            catch (e)
             {
-                try { this.GetSorter().ResetSortIcons(); }
-                catch (e)
+                if (typeof lunr != 'undefined')
                 {
-                    if (this.container.hasClass('sortable'))
-                    {
-                        this.MakeSortable();
-                    }
-                }
-
-                try { this.GetFilterer().ResetFilters(); }
-                catch (e)
-                {
-                    if (this.container.hasClass('filterable'))
-                    {
-                        this.MakeFilterable();
-                    }
-                }
-
-                try { this.GetSearcher().BuildIndexes(); }
-                catch (e)
-                {
-                    if (typeof lunr != 'undefined')
-                    {
-                        this.MakeSearchable();
-                    }
+                    this.MakeSearchable();
                 }
             }
         }
