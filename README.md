@@ -57,5 +57,12 @@ The other features, sorting, searching, filtering and data binding are all
 built on top of this concept. Please see the [examples](/examples) folder
 for more info.
 
+I Confess:
+--------------------------------------------------------------------------------
+The table has no pre built sexy looking themes. In fact I have purposefully
+left the styling as basic as possible so that it can easily be overwritten.
+
+_In short get YOUR graphic designer to make it look sexy :)_
+
 --------------------------------------------------------------------------------
 Developed by Brad Jones - brad@bjc.id.au
