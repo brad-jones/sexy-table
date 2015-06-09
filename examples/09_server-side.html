@@ -18,11 +18,18 @@
                 margin-left: auto;
                 margin-right: auto;
             }
+
+            .search
+            {
+                float: right;
+            }
         </style>
     </head>
     <body>
         <div class="container">
+            <input class="search" type="text" placeholder="Search" />
             <h1>Users</h1>
+            <div style="clear:both"></div>
             <hr>
             <div class="sexy-table sortable filterable">
                 <div class="thead">
@@ -78,7 +85,7 @@
                         // that looks like:
                         // {
                         //      column: 'first_name',
-                        //      direction: 'asc'
+                        //      direction: 'asc || desc'
                         // }
                         //
                         // searched is either null or an object
@@ -94,7 +101,9 @@
                         setTimeout(function()
                         {
                             // Some data that we pretend came from the server.
-                            // The data has been searched and sorted for us.
+                            // I know this dummy data has not been searched or
+                            // sorted, please use your imagination. I am too
+                            // lazy to write the full example :)
                             var response =
                             {
                                 users:
@@ -115,11 +124,22 @@
                             // Pass the response back to the Pager
                             callback(response);
 
-                            // NOTE: If response is an empty array.
+                            // NOTE: If response is null.
                             // The pager will assume there are no more records.
-                            // And stop attempting to load more records.
+                            // And stop attempting to load more records, until
+                            // a new sort or search is performed.
 
                         }, 500);
+                    });
+
+                    $('.search').keypress(function(e)
+                    {
+                        if (e.which != 13) return;
+
+                        $('.sexy-table').data('sexy-table').GetSearcher().Query
+                        (
+                            $(this).val()
+                        );
                     });
                 });
 
