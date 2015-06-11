@@ -23,6 +23,11 @@
   visibility: hidden;
   width: 100%;
 }
+.sexy-table * {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
 .sexy-table ul {
   list-style: none;
   margin: 0;

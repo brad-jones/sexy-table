@@ -311,7 +311,6 @@ var SexyTable;
             this.SetWidthOfCells();
             this.SetHeightOfRows();
             this.UnhideContainer();
-            $(window).resize(this.SetWidthOfCells.bind(this));
             $(window).resize(this.SetHeightOfRows.bind(this));
         }
         Sizer.prototype.ForceResize = function () {
@@ -338,28 +337,10 @@ var SexyTable;
             this.container.find('li').not(this.container.find('.data-bind-template li')).css('width', this.CalculateCellWidth());
         };
         Sizer.prototype.CalculateCellWidth = function () {
-            var cols = this.GetNumberOfCols();
-            var width = this.GetTotalWidthOfTable();
-            var padding = this.GetCellPadding();
-            return (width / cols) - padding;
-        };
-        Sizer.prototype.GetTotalWidthOfTable = function () {
-            var rect = this.container[0].getBoundingClientRect();
-            var width;
-            if (rect.width) {
-                width = rect.width;
-            }
-            else {
-                width = rect.right - rect.left;
-            }
-            return width;
+            return ((1 / this.GetNumberOfCols()) * 100) + '%';
         };
         Sizer.prototype.GetNumberOfCols = function () {
             return this.container.find('ul').first().find('li').length;
-        };
-        Sizer.prototype.GetCellPadding = function () {
-            var firstCell = this.container.find('li').first();
-            return firstCell.outerWidth(true) - firstCell.width();
         };
         Sizer.prototype.UnhideContainer = function () {
             this.container.css('visibility', 'visible');
