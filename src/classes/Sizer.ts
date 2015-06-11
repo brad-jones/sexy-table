@@ -36,10 +36,10 @@ module SexyTable
 
             this.UnhideContainer();
 
-            // Adjust the table sizing as the window changes size.
-            // Obviously this would only have any effect if the table
-            // is inside a fluid container.
-            $(window).resize(this.SetWidthOfCells.bind(this));
+            // Adjust the height of the rows when the window is resized.
+            // The width of the cells are percentages and thus only need
+            // to be calulcated the once. Obviously this will only have any
+            // effect if the table is inside a fluid container.
             $(window).resize(this.SetHeightOfRows.bind(this));
         }
 
@@ -103,44 +103,14 @@ module SexyTable
         }
 
         /**
-         * To determine the width of each cell in the table it's simple
-         * division. Total Width of Table / Number of Columns.
-         * We also need to accound for cell padding / margin.
+         * To determine the width of each cell in the table it's a simple matter
+         * of setting it's width to a percentage of the overall table width.
+         * The browser will then easily take care of dyanmically adjusting the
+         * width of the cells for us.
          */
-        protected CalculateCellWidth(): number
+        protected CalculateCellWidth(): string
         {
-            var cols = this.GetNumberOfCols();
-            var width = this.GetTotalWidthOfTable();
-            var padding = this.GetCellPadding();
-            return (width / cols) - padding;
-        }
-
-        /**
-         * Gets the total width of the table.
-         *
-         * > NOTE: The standard jQuery width() / innerWidth() / outerWidth()
-         * > functions apply a rounding to the result, this does not work.
-         * > We need precision so that the cells fit exactly into their rows.
-         *
-         * @see http://stackoverflow.com/questions/11907514
-         */
-        protected GetTotalWidthOfTable(): number
-        {
-            var rect = this.container[0].getBoundingClientRect();
-
-            var width;
-            if (rect.width)
-            {
-                // `width` is available for IE9+
-                width = rect.width;
-            }
-            else
-            {
-                // Calculate width for IE8 and below
-                width = rect.right - rect.left;
-            }
-
-            return width;
+            return ((1 / this.GetNumberOfCols()) * 100) + '%';
         }
 
         /**
@@ -153,20 +123,6 @@ module SexyTable
         protected GetNumberOfCols(): number
         {
             return this.container.find('ul').first().find('li').length;
-        }
-
-        /**
-         * Gets the amount of Horizontal Cell Padding.
-         *
-         * > NOTE: We make an assumption that all cells in the table will use
-         * > the same padding. So if your CSS styles are doing something odd
-         * > with cell padding this will fail.
-         */
-        protected GetCellPadding(): number
-        {
-            var firstCell = this.container.find('li').first();
-
-            return firstCell.outerWidth(true) - firstCell.width();
         }
 
         /**

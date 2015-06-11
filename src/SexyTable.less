@@ -27,6 +27,14 @@
 
 .sexy-table
 {
+    // We use box sizing inside our sexy tables.
+    *
+    {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+
     // Sexy Tables are hidden on page load because we need to let the
     // javascript calculate the cell width, until this has happened
     // the table will look awful.
