@@ -308,21 +308,25 @@ var SexyTable;
         function Sizer(table) {
             this.table = table;
             this.container = this.table.GetContainer();
-            this.SetWidthOfCells();
-            this.SetHeightOfRows();
+            this.ForceResize();
             this.UnhideContainer();
-            $(window).resize(this.SetHeightOfRows.bind(this));
+            $(window).resize(this.ForceResize.bind(this));
         }
         Sizer.prototype.ForceResize = function () {
-            this.SetWidthOfCells();
+            this.container.width('100%');
+            this.table.GetCells().removeData('dont-resize');
+            this.table.GetCells().css('width', 'auto');
+            this.table.GetRows().css('height', 'auto');
+            this.SetWidthOfColumns();
             this.SetHeightOfRows();
         };
         Sizer.prototype.SetHeightOfRows = function () {
             var that = this;
-            this.container.find('ul').not(this.container.find('.data-bind-template ul')).css('height', 'auto');
-            this.container.find('ul').not(this.container.find('.data-bind-template ul')).each(function (index, row) {
+            this.table.GetRows().each(function (index, row) {
                 $(row).css('height', that.CalculateRowHeight(row));
             });
+            var last = this.table.GetRows().last();
+            last.css('height', last.outerHeight(true) + this.GetRowBorder());
         };
         Sizer.prototype.CalculateRowHeight = function (row) {
             var maxHeight = -1;
@@ -331,16 +335,122 @@ var SexyTable;
                     maxHeight = $(cell).outerHeight(true);
                 }
             });
-            return maxHeight;
+            return maxHeight + this.GetRowBorder();
         };
-        Sizer.prototype.SetWidthOfCells = function () {
-            this.container.find('li').not(this.container.find('.data-bind-template li')).css('width', this.CalculateCellWidth());
+        Sizer.prototype.SetWidthOfColumns = function () {
+            var columns = this.table.GetColumns();
+            var colWidths = [];
+            columns.forEach(function (col) {
+                var maxWidth = -1;
+                col.forEach(function (cell) {
+                    var cellWidth = $(cell).outerWidth(true);
+                    if (cellWidth > maxWidth) {
+                        maxWidth = cellWidth;
+                    }
+                }, this);
+                colWidths.push(maxWidth);
+            }, this);
+            var totalWidth = colWidths.reduce(function (a, b) {
+                return a + b;
+            }, 0);
+            columns.forEach(function (col, colNo) {
+                var width = ((colWidths[colNo] / totalWidth * 100) - 1) + '%';
+                col.forEach(function (cell) {
+                    $(cell).css('width', width);
+                });
+            });
+            var that = this;
+            var recursive = function () {
+                var remove = 0;
+                columns.forEach(function (col, colNo) {
+                    var widths = that.GetColWidths(col);
+                    remove = remove + widths.diff;
+                    col.forEach(function (cell) {
+                        if ($(cell).data('dont-resize') !== true) {
+                            $(cell).css('width', widths.max);
+                        }
+                        if (widths.diff > 0)
+                            $(cell).data('dont-resize', true);
+                    });
+                });
+                var resizeable_cols = that.GetResizeableCols();
+                remove = remove / resizeable_cols;
+                var nothingLeftToResize = true;
+                columns.forEach(function (col, colNo) {
+                    col.forEach(function (cell) {
+                        if ($(cell).data('dont-resize') !== true) {
+                            nothingLeftToResize = false;
+                            var newWidth = $(cell).outerWidth(true) - remove;
+                            $(cell).css('width', newWidth);
+                            var innerWidth = $(cell).find('.inner').outerWidth(true);
+                            if (innerWidth > newWidth) {
+                                if (resizeable_cols > 1) {
+                                    recursive();
+                                }
+                                else {
+                                    col.forEach(function (cell1) {
+                                        $(cell1).css('width', innerWidth);
+                                        $(cell1).data('dont-resize', true);
+                                    });
+                                    var finalWidth = that.GetColWidths(col).max;
+                                    col.forEach(function (cell1) {
+                                        $(cell1).css('width', finalWidth);
+                                    });
+                                    nothingLeftToResize = true;
+                                }
+                            }
+                        }
+                    });
+                });
+                if (nothingLeftToResize) {
+                    var minimumSize = 0;
+                    var row = that.table.GetRows().first();
+                    row.find('li').each(function (index, el) {
+                        minimumSize = minimumSize + $(el).outerWidth(true);
+                    });
+                    minimumSize = minimumSize + (that.GetColumnBorder() * 2);
+                    that.container.css('width', minimumSize);
+                }
+            };
+            recursive();
+        };
+        Sizer.prototype.GetResizeableCols = function () {
+            var resizeable_cols = this.GetNumberOfCols();
+            this.table.GetColumns().forEach(function (col, colNo) {
+                var dontRezise = false;
+                col.forEach(function (cell) {
+                    if ($(cell).data('dont-resize') === true) {
+                        dontRezise = true;
+                    }
+                });
+                if (dontRezise)
+                    --resizeable_cols;
+            });
+            return resizeable_cols;
+        };
+        Sizer.prototype.GetColWidths = function (col) {
+            var widths = [];
+            for (var i = 0; i < col.length; i++) {
+                widths.push($(col[i]).find('.inner').outerWidth(true) + this.GetColumnBorder());
+            }
+            var min = Math.min.apply(null, widths);
+            var max = Math.max.apply(null, widths);
+            var diff = max - min;
+            return { widths: widths, min: min, max: max, diff: diff };
+        };
+        Sizer.prototype.GetRowBorder = function () {
+            var row = this.container.find('ul').first();
+            return row.outerWidth(true) - row.innerWidth();
+        };
+        Sizer.prototype.GetColumnBorder = function () {
+            var cell = this.container.find('li').first();
+            return cell.outerWidth(true) - cell.innerWidth();
         };
         Sizer.prototype.CalculateCellWidth = function () {
             return ((1 / this.GetNumberOfCols()) * 100) + '%';
         };
         Sizer.prototype.GetNumberOfCols = function () {
-            return this.container.find('ul').first().find('li').length;
+            return this.table.GetColumns().length;
         };
         Sizer.prototype.UnhideContainer = function () {
             this.container.css('visibility', 'visible');
@@ -678,6 +788,23 @@ var SexyTable;
                     this.MakeSearchable();
                 }
             }
+        };
+        Table.prototype.GetRows = function () {
+            return this.container.find('ul').not(this.container.find('.data-bind-template ul'));
+        };
+        Table.prototype.GetCells = function () {
+            return this.container.find('li').not(this.container.find('.data-bind-template li'));
+        };
+        Table.prototype.GetColumns = function () {
+            var columns = [];
+            this.GetRows().each(function (rowNo, row) {
+                $(row).find('li').each(function (colNo, cell) {
+                    if (typeof columns[colNo] == 'undefined')
+                        columns.push([]);
+                    columns[colNo].push(cell);
+                });
+            });
+            return columns;
         };
         return Table;
     })();
