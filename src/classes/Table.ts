@@ -412,5 +412,47 @@ module SexyTable
                 }
             }
         }
+
+        /**
+         * Grabs all rows from the table.
+         */
+        public GetRows(): JQuery
+        {
+            return this.container.find('ul').not
+            (
+                this.container.find('.data-bind-template ul')
+            );
+        }
+
+        /**
+         * Grabs all cells in the table.
+         */
+        public GetCells(): JQuery
+        {
+            return this.container.find('li').not
+            (
+                this.container.find('.data-bind-template li')
+            );
+        }
+
+        /**
+         * Creates a multi-dimensional array with all cells
+         * from the table grouped by column.
+         */
+        public GetColumns(): Array<Array<Element>>
+        {
+            var columns = [];
+
+            this.GetRows().each(function(rowNo, row)
+            {
+                $(row).find('li').each(function(colNo, cell)
+                {
+                    if (typeof columns[colNo] == 'undefined') columns.push([]);
+                    columns[colNo].push(cell);
+                });
+            });
+
+            return columns;
+        }
     }
 }
