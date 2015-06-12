@@ -340,7 +340,7 @@ var SexyTable;
                 return a + b;
             }, 0);
             columns.forEach(function (col, colNo) {
-                var width = ((colWidths[colNo] / totalWidth * 100) - 1) + '%';
+                var width = ((colWidths[colNo] / totalWidth * 100) - 0.1) + '%';
                 col.forEach(function (cell) {
                     $(cell).css('width', width);
                 });

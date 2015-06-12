@@ -127,7 +127,7 @@ module SexyTable
             // Now convert the column widths into percentages
             columns.forEach(function(col, colNo)
             {
-                var width = ((colWidths[colNo] / totalWidth * 100) - 1) + '%';
+                var width = ((colWidths[colNo] / totalWidth * 100) - 0.1) + '%';
                 col.forEach(function(cell){ $(cell).css('width', width); });
             });
 
