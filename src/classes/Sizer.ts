@@ -50,6 +50,114 @@ module SexyTable
             this.table.GetRows().css('height', 'auto');
             this.SetWidthOfColumns();
             this.SetHeightOfRows();
+            this.FixLastColumn();
+        }
+
+        /**
+         * Even after all our fancy resizing we still end up with the last
+         * column being too big and overflowing or not bigger enough and
+         * leaving some spare space unallocated.
+         *
+         * This will be due to a number of reasons:
+         *
+         *   - Rounding Errors, diffrent browsers do this better than others.
+         *     Also I believe jQuery plays a role in the rounding of width and
+         *     height values.
+         *
+         *   - Margins, Paddings & Boarders that have not been accounted for.
+         *     Over time hopefully we will be able to catch more and more of
+         *     these special cases.
+         *
+         *   - Other maths errors that I may have made...
+         *     If you find one help me fix it :)
+         *
+         * Anyway this method will apply one last resize of the last column
+         * in the table to ensure everything fits... hopefully :)
+         */
+        protected FixLastColumn(): void
+        {
+            //  Well guess what, it turns out that this method only runs in IE.
+            //  And the IncreaseLastColumn method only runs in Chrome.
+            //  Yet to test in other browsers...
+            if (!this.DecreaseLastColumn())
+            {
+                // Only run this if we didn't do any decreasing
+                // otherwise we are just undoing our work.
+                this.IncreaseLastColumn();
+            }
+        }
+
+        /**
+         * In the event the last column is too wide to fit into
+         * the table this will shrink it so that it hopefully fits.
+         *
+         * > NOTE: There is a small range of widths between the minimum size of
+         * > the table and when the table container is set to 100% width that
+         * > IE still fails and displays a broken table. ITS MOST ANNOYING!!!
+         */
+        protected DecreaseLastColumn(rescurse = 0): boolean
+        {
+            // Make sure we don't recurse forever.
+            // In IE at least it only appears to be the border that we need to
+            // remove. I'm guessing it's a slight diffrence in how border box
+            // sizing is calulated.
+            if (rescurse > this.GetColumnBorder() * 2) return;
+
+            // Assume we havn't resized anything for now.
+            var resized = false;
+
+            // Loop through each row, check if it's overflown,
+            // if it is remove a pixel from the last column.
+            this.container.find('ul').each(function(rowNo, row)
+            {
+                if ($(row).prop('scrollHeight') > $(row).outerHeight())
+                {
+                    var cell = $(row).find('li').last();
+                    cell.css('width', cell.outerWidth(true) - 1);
+                    resized = true;
+                }
+            });
+
+            // If we had to perform any resizing above, lets run again.
+            if (resized) this.DecreaseLastColumn(++rescurse);
+
+            return resized;
+        }
+
+        /**
+         * The counter part to DecreaseLastColumn.
+         * In Chrome I have found that the last column is actually too small
+         * sometimes. This will smartly add extra width to the last column
+         * so that it takes up all avaliable space.
+         */
+        protected IncreaseLastColumn(): void
+        {
+            // Grab the column border value
+            var border = this.GetColumnBorder();
+
+            var padding = this.GetRowPadding();
+
+            // Loop through each row
+            this.container.find('ul').each(function(rowNo, row)
+            {
+                // Sum up all the widths of the cells
+                var width = 0;
+                $(row).find('li').each(function(cellNo, cell)
+                {
+                    width = width + $(cell).outerWidth(true);
+                });
+
+                // Get the diffrence between the calculated
+                // width and the actual width of the row.
+                var diff = $(row).innerWidth() - width;
+
+                // Account for any border / padding
+                diff = diff - border - padding;
+
+                // Increase the cell by the diffrence
+                var last = $(row).find('li').last();
+                last.css('width', last.outerWidth(true) + diff);
+            });
         }
 
         /**
@@ -127,7 +235,7 @@ module SexyTable
             // Now convert the column widths into percentages
             columns.forEach(function(col, colNo)
             {
-                var width = ((colWidths[colNo] / totalWidth * 100) - 0.1) + '%';
+                var width = (colWidths[colNo] / totalWidth * 100) + '%';
                 col.forEach(function(cell){ $(cell).css('width', width); });
             });
 
@@ -245,6 +353,9 @@ module SexyTable
                     // Account for any border
                     minimumSize = minimumSize + (that.GetColumnBorder() * 2);
 
+                    // Account for padding applied to the row
+                    minimumSize = minimumSize + that.GetRowPadding();
+
                     // Set the overall width of the sexy table.
                     // It will now overflow it's parent container
                     // just like a real table.
@@ -315,7 +426,21 @@ module SexyTable
         {
             var row = this.container.find('ul').first();
 
-            return row.outerWidth(true) - row.innerWidth();
+            return row.outerHeight(true) - row.innerHeight();
+        }
+
+        /**
+         * In some css layouts you may like to add horizontal padding to rows.
+         * Creating a frame and inseting the actual table contents.
+         * This method calculates that padding if applied.
+         *
+         * > NOTE: We assume the same padding has been applied to all rows.
+         */
+        protected GetRowPadding(): number
+        {
+            var row = this.container.find('ul').first();
+
+            return row.outerWidth(true) - row.width();
         }
 
         /**
@@ -328,17 +453,6 @@ module SexyTable
             var cell = this.container.find('li').first();
 
             return cell.outerWidth(true) - cell.innerWidth();
-        }
-
-        /**
-         * To determine the width of each cell in the table it's a simple matter
-         * of setting it's width to a percentage of the overall table width.
-         * The browser will then easily take care of dyanmically adjusting the
-         * width of the cells for us.
-         */
-        protected CalculateCellWidth(): string
-        {
-            return ((1 / this.GetNumberOfCols()) * 100) + '%';
         }
 
         /**

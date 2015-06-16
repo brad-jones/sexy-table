@@ -51,6 +51,11 @@
         // The row expands to take up the entire width of the table.
         width: 100%;
 
+        // As the javascript uses scrollHeight to determine if a row has
+        // overflown it is important that we set the rows overflow property,
+        // to "hidden". "auto" DOES NOT WORK!
+        overflow: hidden;
+
         // Obviously an LI element represents a table cell.
         li
         {

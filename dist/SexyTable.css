@@ -20,6 +20,7 @@
   padding: 0;
   zoom: 1;
   width: 100%;
+  overflow: hidden;
 }
 .sexy-table ul:before,
 .sexy-table ul:after {

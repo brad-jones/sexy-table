@@ -305,6 +305,42 @@ var SexyTable;
             this.table.GetRows().css('height', 'auto');
             this.SetWidthOfColumns();
             this.SetHeightOfRows();
+            this.FixLastColumn();
+        };
+        Sizer.prototype.FixLastColumn = function () {
+            if (!this.DecreaseLastColumn()) {
+                this.IncreaseLastColumn();
+            }
+        };
+        Sizer.prototype.DecreaseLastColumn = function (rescurse) {
+            if (rescurse === void 0) { rescurse = 0; }
+            if (rescurse > this.GetColumnBorder() * 2)
+                return;
+            var resized = false;
+            this.container.find('ul').each(function (rowNo, row) {
+                if ($(row).prop('scrollHeight') > $(row).outerHeight()) {
+                    var cell = $(row).find('li').last();
+                    cell.css('width', cell.outerWidth(true) - 1);
+                    resized = true;
+                }
+            });
+            if (resized)
+                this.DecreaseLastColumn(++rescurse);
+            return resized;
+        };
+        Sizer.prototype.IncreaseLastColumn = function () {
+            var border = this.GetColumnBorder();
+            var padding = this.GetRowPadding();
+            this.container.find('ul').each(function (rowNo, row) {
+                var width = 0;
+                $(row).find('li').each(function (cellNo, cell) {
+                    width = width + $(cell).outerWidth(true);
+                });
+                var diff = $(row).innerWidth() - width;
+                diff = diff - border - padding;
+                var last = $(row).find('li').last();
+                last.css('width', last.outerWidth(true) + diff);
+            });
         };
         Sizer.prototype.SetHeightOfRows = function () {
             var that = this;
@@ -340,7 +376,7 @@ var SexyTable;
                 return a + b;
             }, 0);
             columns.forEach(function (col, colNo) {
-                var width = ((colWidths[colNo] / totalWidth * 100) - 0.1) + '%';
+                var width = (colWidths[colNo] / totalWidth * 100) + '%';
                 col.forEach(function (cell) {
                     $(cell).css('width', width);
                 });
@@ -395,6 +431,7 @@ var SexyTable;
                         minimumSize = minimumSize + $(el).outerWidth(true);
                     });
                     minimumSize = minimumSize + (that.GetColumnBorder() * 2);
+                    minimumSize = minimumSize + that.GetRowPadding();
                     that.container.css('width', minimumSize);
                 }
             };
@@ -426,14 +463,15 @@ var SexyTable;
         };
         Sizer.prototype.GetRowBorder = function () {
             var row = this.container.find('ul').first();
-            return row.outerWidth(true) - row.innerWidth();
+            return row.outerHeight(true) - row.innerHeight();
+        };
+        Sizer.prototype.GetRowPadding = function () {
+            var row = this.container.find('ul').first();
+            return row.outerWidth(true) - row.width();
         };
         Sizer.prototype.GetColumnBorder = function () {
             var cell = this.container.find('li').first();
             return cell.outerWidth(true) - cell.innerWidth();
-        };
-        Sizer.prototype.CalculateCellWidth = function () {
-            return ((1 / this.GetNumberOfCols()) * 100) + '%';
         };
         Sizer.prototype.GetNumberOfCols = function () {
             return this.table.GetColumns().length;
