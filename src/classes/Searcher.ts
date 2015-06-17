@@ -135,7 +135,10 @@ module SexyTable
             }
 
             // Maintain any current sort state
-            matches = this.table.GetSorter().Sort(matches);
+            if (this.table.HasSorter())
+            {
+                matches = this.table.GetSorter().Sort(matches);
+            }
 
             // Redraw the table
             this.table.Redraw(matches, true);
