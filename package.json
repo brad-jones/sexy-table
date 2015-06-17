@@ -23,6 +23,7 @@
     "jquery": "^1.11.3",
     "lt-ie-9": "brad-jones/lt-ie-9",
     "lunr": "^0.5.9",
+    "mousetrap": "^1.5.2",
     "normalize.css": "^3.0.3",
     "transparency": "^0.10.0"
   },
