@@ -19,6 +19,7 @@
     ],
     "files": [
         "./src/SexyTable.ts",
+        "./src/classes/Editor.ts",
         "./src/classes/Filterer.ts",
         "./src/classes/Pager.ts",
         "./src/classes/Reader.ts",

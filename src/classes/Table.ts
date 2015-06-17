@@ -123,6 +123,19 @@ module SexyTable
 
             return this.pager;
         }
+        /**
+         * The instance of the Editor for this Table.
+         */
+        protected editor: Editor;
+        public GetEditor(): Editor
+        {
+            if (this.editor == null)
+            {
+                throw new Error('Table is not Editable! Use MakeEditable.');
+            }
+
+            return this.editor;
+        }
 
         /**
          * Give us the tables top level container element.
@@ -169,6 +182,12 @@ module SexyTable
                 this.MakeFilterable();
             }
 
+            // Automatically make the table editable if it has the class
+            if (this.container.hasClass('editable'))
+            {
+                this.MakeEditable();
+            }
+
             // Up until this point the table will be hidden from view by css.
             // The sizer will automatically calculate the width of the height
             // of the table cells and then show the table.
@@ -179,6 +198,25 @@ module SexyTable
             {
                 this.MakeSearchable();
             }
+        }
+
+        /**
+         * Creates a new Editor for the table.
+         */
+        public MakeEditable(): void
+        {
+            if (this.editor != null) return;
+
+            if (typeof Mousetrap == 'undefined')
+            {
+                throw new Error
+                (
+                    'Editable tables require mousetrap.js '+
+                    'see: https://craig.is/killing/mice'
+                );
+            }
+
+            this.editor = new Editor(this);
         }
 
         /**
@@ -393,6 +431,12 @@ module SexyTable
             if (this.filterer == null && this.container.hasClass('filterable'))
             {
                 this.MakeFilterable();
+            }
+
+            // Make the table editable.
+            if (this.editor == null && this.container.hasClass('filterable'))
+            {
+                this.MakeEditable();
             }
 
             // Force a resize of the table after adding the data
