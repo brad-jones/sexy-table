@@ -162,7 +162,7 @@ module SexyTable
             this.perColIndex = this.BuildIndexSchema();
 
             // Grab the table data
-            var data = this.table.GetReader().GetSerialized();
+            var data = this.table.GetReader().GetOriginal();
 
             // Seed both indexes with the table data
             for (var row in data)
