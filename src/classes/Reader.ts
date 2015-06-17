@@ -203,5 +203,27 @@ module SexyTable
                 }
             );
         }
+
+        /**
+         * Given a particular cell from the table,
+         * we will update the serialized state.
+         */
+        public UpdateOriginal(cell: JQuery): void
+        {
+            var parent = cell.parents('ul');
+
+            for (var i = 0; i < this.original.length; i++)
+            {
+                var row = this.original[i];
+
+                if (row['_dom'] === parent[0])
+                {
+                    var colNo = parent.find('.inner').index(cell);
+                    var colHeading = this.headings[colNo];
+                    row[colHeading] = cell.text();
+                    break;
+                }
+            }
+        }
     }
 }
