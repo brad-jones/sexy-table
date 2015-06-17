@@ -39,6 +39,10 @@ module SexyTable
 
             return this.reader;
         }
+        public HasReader(): boolean
+        {
+            return (this.reader != null);
+        }
 
         /**
          * The instance of the Writer for this Table.
@@ -52,6 +56,10 @@ module SexyTable
             }
 
             return this.writer;
+        }
+        public HasWriter(): boolean
+        {
+            return (this.writer != null);
         }
 
         /**
@@ -67,6 +75,10 @@ module SexyTable
 
             return this.sizer;
         }
+        public HasSizer(): boolean
+        {
+            return (this.sizer != null);
+        }
 
         /**
          * The instance of the Sorter for this Table.
@@ -80,6 +92,10 @@ module SexyTable
             }
 
             return this.sorter;
+        }
+        public HasSorter(): boolean
+        {
+            return (this.sorter != null);
         }
 
         /**
@@ -95,6 +111,10 @@ module SexyTable
 
             return this.searcher;
         }
+        public HasSearcher(): boolean
+        {
+            return (this.searcher != null);
+        }
 
         /**
          * The instance of the Sorter for this Table.
@@ -108,6 +128,10 @@ module SexyTable
             }
 
             return this.filterer;
+        }
+        public HasFilterer(): boolean
+        {
+            return (this.filterer != null);
         }
 
         /**
@@ -123,6 +147,11 @@ module SexyTable
 
             return this.pager;
         }
+        public HasPager(): boolean
+        {
+            return (this.pager != null);
+        }
+
         /**
          * The instance of the Editor for this Table.
          */
@@ -135,6 +164,10 @@ module SexyTable
             }
 
             return this.editor;
+        }
+        public HasEditor(): boolean
+        {
+            return (this.editor != null);
         }
 
         /**
