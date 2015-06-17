@@ -104,6 +104,14 @@
         }
     }
 
+    // Make sure any inputs stay within their cells. Currently needed for
+    // filterable and editable tables. But is so key to ensuring the table
+    // layout does not break I figure I'll apply to any sexy-table.
+    input
+    {
+        width:100%;
+    }
+
     // Centers all column heading and bolds the text
     & .thead
     {
@@ -134,15 +142,16 @@
         }
     }
 
-    // Make sure the filters stay within their cells
-    &.filterable
+    // Just like the sortable table headings we need to stop the user from
+    // selecting text. It's purely a visual thing so I am not too fussy that
+    // this css property is not standard yet. Here we disable is for the entire
+    // table. In the event the user wants to copy text from a cell they can
+    // double click and copy from the resulting input field.
+    &.editable
     {
-        .thead
+        .inner
         {
-            input
-            {
-                width:100%;
-            }
+            user-select: none;
         }
     }
 }
