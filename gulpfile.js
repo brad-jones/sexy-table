@@ -5,6 +5,7 @@ var less = require('gulp-less');
 var ts = require('gulp-typescript');
 var uglify = require('gulp-uglify');
 var uglifycss = require('gulp-uglifycss');
+var autoprefixer = require('gulp-autoprefixer');
 
 gulp.task('default', ['compile-ts', 'compile-less'], function()
 {
@@ -40,9 +41,14 @@ gulp.task('compile-ts', function()
 gulp.task('compile-less', function()
 {
     return gulp.src('./src/**/*.less')
-        
+
         // Compile the less to css
         .pipe(less())
+
+        .pipe(autoprefixer
+        ({
+            browsers: ['last 2 versions', 'ie 8', 'ie 9']
+        }))
 
         // Output the compiled unminified css
         .pipe(gulp.dest('./dist'))
