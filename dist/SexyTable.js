@@ -11,6 +11,45 @@ var SexyTable;
 })(SexyTable || (SexyTable = {}));
 var SexyTable;
 (function (SexyTable) {
+    var Editor = (function () {
+        function Editor(table) {
+            this.table = table;
+            this.container = this.table.GetContainer();
+            $(this.container).on('dblclick', '.inner', this.OnCellDbClick.bind(this));
+        }
+        Editor.prototype.OnCellDbClick = function (event) {
+            var that = this;
+            var cell = $(event.currentTarget);
+            if (cell.parents('.thead').length > 0)
+                return;
+            var data = cell.text();
+            var input = $('<input />');
+            input.attr('type', 'text');
+            input.val(data);
+            var save = that.OnSave.bind(that, cell);
+            Mousetrap(input[0]).bind(['enter', 'mod+s'], save);
+            input.focusout(save);
+            cell.empty().append(input);
+            input.focus();
+        };
+        Editor.prototype.OnSave = function (cell) {
+            var data = cell.find('input').val();
+            cell.empty().text(data);
+            if (this.table.HasSearcher()) {
+                this.table.GetSizer().ForceResize();
+                this.table.GetReader().UpdateOriginal(cell);
+                this.table.GetSearcher().BuildIndexes();
+            }
+            else {
+                this.table.Refresh();
+            }
+        };
+        return Editor;
+    })();
+    SexyTable.Editor = Editor;
+})(SexyTable || (SexyTable = {}));
+var SexyTable;
+(function (SexyTable) {
     var Filterer = (function () {
         function Filterer(table) {
             this.table = table;
@@ -201,6 +240,18 @@ var SexyTable;
                 return v.toString(16);
             });
         };
+        Reader.prototype.UpdateOriginal = function (cell) {
+            var parent = cell.parents('ul');
+            for (var i = 0; i < this.original.length; i++) {
+                var row = this.original[i];
+                if (row['_dom'] === parent[0]) {
+                    var colNo = parent.find('.inner').index(cell);
+                    var colHeading = this.headings[colNo];
+                    row[colHeading] = cell.text();
+                    break;
+                }
+            }
+        };
         return Reader;
     })();
     SexyTable.Reader = Reader;
@@ -248,7 +299,9 @@ var SexyTable;
                     }
                 }
             }
-            matches = this.table.GetSorter().Sort(matches);
+            if (this.table.HasSorter()) {
+                matches = this.table.GetSorter().Sort(matches);
+            }
             this.table.Redraw(matches, true);
         };
         Searcher.prototype.BuildIndexes = function () {
@@ -256,7 +309,7 @@ var SexyTable;
                 return;
             this.index = this.BuildIndexSchema();
             this.perColIndex = this.BuildIndexSchema();
-            var data = this.table.GetReader().GetSerialized();
+            var data = this.table.GetReader().GetOriginal();
             for (var row in data) {
                 var documentAll = {}, documentCol = {};
                 for (var column in data[row]) {
@@ -646,6 +699,9 @@ var SexyTable;
             if (this.container.hasClass('filterable')) {
                 this.MakeFilterable();
             }
+            if (this.container.hasClass('editable')) {
+                this.MakeEditable();
+            }
             this.sizer = new SexyTable.Sizer(this);
             if (typeof lunr != 'undefined') {
                 this.MakeSearchable();
@@ -660,11 +716,17 @@ var SexyTable;
             }
             return this.reader;
         };
+        Table.prototype.HasReader = function () {
+            return (this.reader != null);
+        };
         Table.prototype.GetWriter = function () {
             if (this.writer == null) {
                 throw new Error('Table is not Writeable! Use MakeWriteable.');
             }
             return this.writer;
+        };
+        Table.prototype.HasWriter = function () {
+            return (this.writer != null);
         };
         Table.prototype.GetSizer = function () {
             if (this.sizer == null) {
@@ -672,11 +734,17 @@ var SexyTable;
             }
             return this.sizer;
         };
+        Table.prototype.HasSizer = function () {
+            return (this.sizer != null);
+        };
         Table.prototype.GetSorter = function () {
             if (this.sorter == null) {
                 throw new Error('Table is not Sortable! Use MakeSortable.');
             }
             return this.sorter;
+        };
+        Table.prototype.HasSorter = function () {
+            return (this.sorter != null);
         };
         Table.prototype.GetSearcher = function () {
             if (this.searcher == null) {
@@ -684,17 +752,43 @@ var SexyTable;
             }
             return this.searcher;
         };
+        Table.prototype.HasSearcher = function () {
+            return (this.searcher != null);
+        };
         Table.prototype.GetFilterer = function () {
             if (this.filterer == null) {
                 throw new Error('Table is not Filterable! Use MakeFilterable.');
             }
             return this.filterer;
         };
+        Table.prototype.HasFilterer = function () {
+            return (this.filterer != null);
+        };
         Table.prototype.GetPager = function () {
             if (this.pager == null) {
                 throw new Error('Table is not Pageable! Use MakePageable.');
             }
             return this.pager;
+        };
+        Table.prototype.HasPager = function () {
+            return (this.pager != null);
+        };
+        Table.prototype.GetEditor = function () {
+            if (this.editor == null) {
+                throw new Error('Table is not Editable! Use MakeEditable.');
+            }
+            return this.editor;
+        };
+        Table.prototype.HasEditor = function () {
+            return (this.editor != null);
+        };
+        Table.prototype.MakeEditable = function () {
+            if (this.editor != null)
+                return;
+            if (typeof Mousetrap == 'undefined') {
+                throw new Error('Editable tables require mousetrap.js ' + 'see: https://craig.is/killing/mice');
+            }
+            this.editor = new SexyTable.Editor(this);
         };
         Table.prototype.MakePageable = function (nextCb) {
             if (this.pager != null)
@@ -797,6 +891,9 @@ var SexyTable;
             }
             if (this.filterer == null && this.container.hasClass('filterable')) {
                 this.MakeFilterable();
+            }
+            if (this.editor == null && this.container.hasClass('filterable')) {
+                this.MakeEditable();
             }
             try {
                 this.GetSizer().ForceResize();

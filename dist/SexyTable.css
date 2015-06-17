@@ -10,8 +10,6 @@
 }
 .sexy-table,
 .sexy-table * {
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 .sexy-table ul {
@@ -50,21 +48,25 @@
 .sexy-table ul li {
   border-left: 1px solid #000;
 }
+.sexy-table input {
+  width: 100%;
+}
 .sexy-table .thead .inner {
   text-align: center;
   font-weight: bold;
 }
 .sexy-table.sortable .thead .inner {
-  -webkit-touch-callout: none;
   -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
 }
 .sexy-table.sortable .thead .inner i {
   padding-left: 5px;
 }
-.sexy-table.filterable .thead input {
-  width: 100%;
+.sexy-table.editable .inner {
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
 }
