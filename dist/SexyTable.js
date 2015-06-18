@@ -245,6 +245,14 @@ var SexyTable;
                 for (var i = 0; i < cols; i++)
                     headings.push("col_" + i);
             }
+            else if (this.table.HasWriter()) {
+                this.container.find('.data-bind-template ul').first().find('li').each(function (index, el) {
+                    var heading = $(el).data('bind');
+                    if (heading === undefined)
+                        heading = "";
+                    headings.push(heading);
+                });
+            }
             else {
                 this.container.find('.thead ul').first().find('li').each(function (index, cell) {
                     headings.push($(cell).find('.inner').text().toLowerCase().replace(" ", "_"));

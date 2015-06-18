@@ -137,6 +137,18 @@ module SexyTable
                 var cols = this.container.find('ul').first().find('li').length;
                 for (var i = 0; i < cols; i++) headings.push("col_" + i);
             }
+            else if (this.table.HasWriter())
+            {
+                // The table has a data binding template so lets
+                // use the data-bind values as our heading names.
+                this.container.find('.data-bind-template ul').first().find('li')
+                .each(function(index, el)
+                {
+                    var heading = $(el).data('bind');
+                    if (heading === undefined) heading = "";
+                    headings.push(heading);
+                });
+            }
             else
             {
                 // We do have a thead so lets extract the column headings
