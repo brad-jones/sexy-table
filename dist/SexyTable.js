@@ -921,7 +921,7 @@ var SexyTable;
             if (this.filterer == null && this.container.hasClass('filterable')) {
                 this.MakeFilterable();
             }
-            if (this.editor == null && this.container.hasClass('filterable')) {
+            if (this.editor == null && this.container.hasClass('editable')) {
                 this.MakeEditable();
             }
             try {

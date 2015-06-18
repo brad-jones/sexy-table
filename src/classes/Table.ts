@@ -467,7 +467,7 @@ module SexyTable
             }
 
             // Make the table editable.
-            if (this.editor == null && this.container.hasClass('filterable'))
+            if (this.editor == null && this.container.hasClass('editable'))
             {
                 this.MakeEditable();
             }
