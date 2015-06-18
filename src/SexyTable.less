@@ -122,7 +122,7 @@
         }
     }
 
-    // If the table is sortable let style the font awesome icons
+    // Sortable Tables
     &.sortable
     {
         .thead
@@ -142,16 +142,39 @@
         }
     }
 
-    // Just like the sortable table headings we need to stop the user from
-    // selecting text. It's purely a visual thing so I am not too fussy that
-    // this css property is not standard yet. Here we disable is for the entire
-    // table. In the event the user wants to copy text from a cell they can
-    // double click and copy from the resulting input field.
+    // Editable Tables
     &.editable
     {
         .inner
         {
+            // Just like the sortable table headings we need to stop the user
+            // from selecting text. It's purely a visual thing so I am not too
+            // fussy that this css property is not standard yet. Here we disable
+            // is for the entire table. In the event the user wants to copy text
+            // from a cell they can double click and copy from the resulting
+            // input field.
             user-select: none;
+
+            // Needed so that the edit prompt can be positioned at the
+            // top of the cell and not take up any extra space.
+            position: relative;
+        }
+
+        .edit-prompt
+        {
+            font-size: 0.7em;
+            color: #999999;
+            position: absolute;
+            top: 0px;
+
+            // So that it doesn't appear too harsh
+            // we will fade the prompt into view.
+            opacity: 0;
+            transition: opacity 0.5s linear;
+            &.show
+            {
+                opacity: 1;
+            }
         }
     }
 }

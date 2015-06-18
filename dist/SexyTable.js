@@ -1,6 +1,9 @@
 var SexyTable;
 (function (SexyTable) {
     SexyTable.AutoMakeSexy = true;
+    if (typeof jQuery == 'undefined') {
+        throw new Error('SexyTable requires jQuery, see: http://jquery.com/');
+    }
     $(document).ready(function () {
         if (SexyTable.AutoMakeSexy) {
             $('.sexy-table').each(function (index, table) {
@@ -15,13 +18,39 @@ var SexyTable;
         function Editor(table) {
             this.table = table;
             this.container = this.table.GetContainer();
-            $(this.container).on('dblclick', '.inner', this.OnCellDbClick.bind(this));
+            this.container.on('dblclick', '.inner', this.OnCellDbClick.bind(this));
+            this.container.on('mouseenter', '.inner', this.ShowEditPrompt.bind(this));
+            this.container.on('mouseleave', '.inner', this.HideEditPrompt.bind(this));
         }
+        Editor.prototype.IsCellEditable = function (cell) {
+            if (cell.parents('.thead').length > 0)
+                return false;
+            if (cell.parents('li').data('no-edit') === true)
+                return false;
+            return true;
+        };
+        Editor.prototype.ShowEditPrompt = function (event) {
+            var cell = $(event.currentTarget);
+            if (!this.IsCellEditable(cell))
+                return;
+            var prompt = $('<p />');
+            prompt.addClass('edit-prompt');
+            prompt.append($('<i class="fa fa-pencil-square-o"></i>'));
+            prompt.append(' Double Click to Edit Me!');
+            cell.append(prompt);
+            setTimeout(function () {
+                prompt.addClass('show');
+            }, 0);
+        };
+        Editor.prototype.HideEditPrompt = function (event) {
+            $(event.currentTarget).find('.edit-prompt').remove();
+        };
         Editor.prototype.OnCellDbClick = function (event) {
             var that = this;
             var cell = $(event.currentTarget);
-            if (cell.parents('.thead').length > 0)
+            if (!this.IsCellEditable(cell))
                 return;
+            cell.trigger('mouseleave');
             var data = cell.text();
             var input = $('<input />');
             input.attr('type', 'text');

@@ -69,4 +69,16 @@
      -moz-user-select: none;
       -ms-user-select: none;
           user-select: none;
+  position: relative;
+}
+.sexy-table.editable .edit-prompt {
+  font-size: 0.7em;
+  color: #999999;
+  position: absolute;
+  top: 0px;
+  opacity: 0;
+  transition: opacity 0.5s linear;
+}
+.sexy-table.editable .edit-prompt.show {
+  opacity: 1;
 }
