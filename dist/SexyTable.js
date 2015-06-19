@@ -17,11 +17,15 @@ var SexyTable;
     var Editor = (function () {
         function Editor(table) {
             this.table = table;
+            this.onEditCallBacks = new Array();
             this.container = this.table.GetContainer();
             this.container.on('dblclick', '.inner', this.OnCellDbClick.bind(this));
             this.container.on('mouseenter', '.inner', this.ShowEditPrompt.bind(this));
             this.container.on('mouseleave', '.inner', this.HideEditPrompt.bind(this));
         }
+        Editor.prototype.OnEdit = function (callBack) {
+            this.onEditCallBacks.push(callBack);
+        };
         Editor.prototype.IsCellEditable = function (cell) {
             if (cell.parents('.thead').length > 0)
                 return false;
@@ -72,6 +76,17 @@ var SexyTable;
             else {
                 this.table.Refresh();
             }
+            var row;
+            if (cell.parents('ul[id]').length == 1) {
+                row = parseInt(cell.parents('ul[id]').attr('id'));
+            }
+            else {
+                row = this.container.find('.tbody').find('ul').index(cell.parents('ul'));
+            }
+            var col = this.table.GetReader().GetHeading(cell);
+            this.onEditCallBacks.forEach(function (callback) {
+                callback(row, col, data, cell);
+            });
         };
         return Editor;
     })();
@@ -288,6 +303,9 @@ var SexyTable;
                     break;
                 }
             }
+        };
+        Reader.prototype.GetHeading = function (cell) {
+            return this.headings[cell.parents('ul').find('.inner').index(cell)];
         };
         return Reader;
     })();
