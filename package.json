@@ -2,7 +2,7 @@
   "name": "sexy-table",
   "description": "A good looking HTML5 table that's not a table :)",
   "author": "Brad Jones <brad@bjc.id.au>",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "license": "MIT",
   "keywords": [
     "styled",
@@ -39,6 +39,6 @@
   },
   "scripts":
   {
-    "postinstall": "npm install transparency@^0.10.0 --ignore-scripts && npm install tsd -g && tsd reinstall"
+    "postinstall": "npm install transparency@^0.10.0 --ignore-scripts && npm install tsd -g && tsd reinstall && tsd rebundle"
   }
 }
