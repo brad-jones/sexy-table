@@ -2,7 +2,7 @@
   "name": "sexy-table",
   "description": "A good looking HTML5 table that's not a table :)",
   "author": "Brad Jones <brad@bjc.id.au>",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "license": "MIT",
   "keywords": [
     "styled",
@@ -24,8 +24,7 @@
     "lt-ie-9": "brad-jones/lt-ie-9",
     "lunr": "^0.5.9",
     "mousetrap": "^1.5.2",
-    "normalize.css": "^3.0.3",
-    "transparency": "^0.10.0"
+    "normalize.css": "^3.0.3"
   },
   "devDependencies": {
     "gulp": "^3.8.11",
@@ -37,5 +36,9 @@
     "gulp-rename": "^1.2.2",
     "less": "^2.5.1",
     "typescript": "^1.5.0-beta"
+  },
+  "scripts":
+  {
+    "postinstall": "npm install transparency@^0.10.0 --ignore-scripts && npm install tsd -g && tsd reinstall"
   }
 }
