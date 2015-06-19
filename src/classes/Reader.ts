@@ -237,5 +237,13 @@ module SexyTable
                 }
             }
         }
+
+        /**
+         * Given a cell of the table, this will return the column heading.
+         */
+        public GetHeading(cell: JQuery): string
+        {
+            return this.headings[cell.parents('ul').find('.inner').index(cell)];
+        }
     }
 }
