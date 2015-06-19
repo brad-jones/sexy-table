@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sexy Table - Custom Widths Example</title>
+        <link rel="stylesheet" href="../node_modules/normalize.css/normalize.css" />
+        <link rel="stylesheet" href="../dist/SexyTable.css" />
+        <script src="../node_modules/jquery/dist/jquery.js"></script>
+        <!--[if lt IE 9]><script src="../node_modules/lt-ie-9/lt-ie-9.js"></script><![endif]-->
+        <script src="../dist/SexyTable.js"></script>
+        <style type="text/css">
+            .container
+            {
+                width: 50%;
+                margin-top: 50px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .unwrap li:nth-of-type(1)
+            {
+                min-width: 200px;
+            }
+
+            .unwrap li:nth-of-type(3)
+            {
+                min-width: 200px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>"Wrapped" name and date columns.</h1><hr>
+            <div class="sexy-table">
+                <ul>
+                    <li>Name</li>
+                    <li>Description</li>
+                    <li>Modified</li>
+                </ul>
+                <ul>
+                    <li>foo-bar</li>
+                    <li>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                        Cras scelerisque nibh in volutpat eleifend. Suspendisse
+                        vulputate, urna vel facilisis dignissim, libero libero
+                        accumsan ligula, id congue metus ex quis est. Sed sit
+                        amet dictum leo. Aenean consequat, nibh quis faucibus
+                        dictum, diam leo dapibus eros, a commodo nunc dolor sed
+                        lorem. In sollicitudin egestas lorem, ac rhoncus turpis
+                        porttitor a.
+                    </li>
+                    <li>01/01/2015 09:00:00</li>
+                </ul>
+            </div>
+
+            <h1>"Unwrapped" name and date columns.</h1><hr>
+            <div class="sexy-table unwrap">
+                <ul>
+                    <li>Name</li>
+                    <li>Description</li>
+                    <li>Modified</li>
+                </ul>
+                <ul>
+                    <li>foo-bar</li>
+                    <li>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                        Cras scelerisque nibh in volutpat eleifend. Suspendisse
+                        vulputate, urna vel facilisis dignissim, libero libero
+                        accumsan ligula, id congue metus ex quis est. Sed sit
+                        amet dictum leo. Aenean consequat, nibh quis faucibus
+                        dictum, diam leo dapibus eros, a commodo nunc dolor sed
+                        lorem. In sollicitudin egestas lorem, ac rhoncus turpis
+                        porttitor a.
+                    </li>
+                    <li>01/01/2015 09:00:00</li>
+                </ul>
+            </div>
+        </div>
+    </body>
+</html>

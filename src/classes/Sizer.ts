@@ -273,7 +273,10 @@ module SexyTable
                             $(cell).css('width', widths.max);
                         }
 
-                        if (widths.diff > 0) $(cell).data('dont-resize', true);
+                        if (widths.diff > 0)
+                        {
+                            $(cell).data('dont-resize', true);
+                        }
                     });
                 });
 
@@ -413,6 +416,37 @@ module SexyTable
             var min = Math.min.apply(null, widths);
             var max = Math.max.apply(null, widths);
             var diff = max - min;
+
+            // We have a column that has a minimum width and has no cells wider
+            // than that width. So we need to get the diff between the minimum
+            // width and the natural width of the column.
+            if (parseInt($(col[0]).css('min-width')) > 0 && diff == 0)
+            {
+                // Check if we have the width already calculated
+                if (typeof $(col[0]).data('min-width') === 'undefined')
+                {
+                    // Save and reset the min width value
+                    var tmp = $(col[0]).css('min-width');
+                    $(col[0]).css('min-width', '0');
+
+                    // Grab the natual width of the column
+                    min = $(col[0]).find('.inner').outerWidth(true) +
+                          this.GetColumnBorder();
+
+                    // Save the value for future recursions
+                    $(col[0]).data('min-width', min);
+
+                    // Put the min width value back as it was
+                    $(col[0]).css('min-width', tmp);
+                }
+                else
+                {
+                    min = $(col[0]).data('min-width');
+                }
+
+                // Using the new min value recalculate the diff
+                diff = max - min;
+            }
 
             return { widths: widths, min: min, max: max, diff: diff };
         }

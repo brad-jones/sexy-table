@@ -481,8 +481,9 @@ var SexyTable;
                         if ($(cell).data('dont-resize') !== true) {
                             $(cell).css('width', widths.max);
                         }
-                        if (widths.diff > 0)
+                        if (widths.diff > 0) {
                             $(cell).data('dont-resize', true);
+                        }
                     });
                 });
                 var resizeable_cols = that.GetResizeableCols();
@@ -549,6 +550,19 @@ var SexyTable;
             var min = Math.min.apply(null, widths);
             var max = Math.max.apply(null, widths);
             var diff = max - min;
+            if (parseInt($(col[0]).css('min-width')) > 0 && diff == 0) {
+                if (typeof $(col[0]).data('min-width') === 'undefined') {
+                    var tmp = $(col[0]).css('min-width');
+                    $(col[0]).css('min-width', '0');
+                    min = $(col[0]).find('.inner').outerWidth(true) + this.GetColumnBorder();
+                    $(col[0]).data('min-width', min);
+                    $(col[0]).css('min-width', tmp);
+                }
+                else {
+                    min = $(col[0]).data('min-width');
+                }
+                diff = max - min;
+            }
             return { widths: widths, min: min, max: max, diff: diff };
         };
         Sizer.prototype.GetRowBorder = function () {
