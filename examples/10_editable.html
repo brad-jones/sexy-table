@@ -19,6 +19,25 @@
                 margin-right: auto;
             }
         </style>
+        <script>
+            $(document).ready(function()
+            {
+                /**
+                 * You may use this hook to automatically
+                 * save data back to server.
+                 */
+                $('.sexy-table').data('sexy-table').GetEditor().OnEdit
+                (
+                    function(row, col, value, cell)
+                    {
+                        console.log("ROW NUMBER / ID: " + row);
+                        console.log("COLUMN HEADING: " + col);
+                        console.log("NEW CELL VALUE: " + value);
+                        console.log(cell);
+                    }
+                );
+            });
+        </script>
     </head>
     <body>
         <div class="container">

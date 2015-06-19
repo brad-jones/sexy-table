@@ -30,6 +30,11 @@ module SexyTable
         protected container: JQuery;
 
         /**
+         * An array of callbacks, that will be run upon a cell being edited.
+         */
+        protected onEditCallBacks = new Array<OnEditCallback>();
+
+        /**
          * Registers the editor events.
          */
         public constructor(protected table: Table)
@@ -63,6 +68,17 @@ module SexyTable
                 '.inner',
                 this.HideEditPrompt.bind(this)
             );
+        }
+
+        /**
+         * Registers an OnEdit Callback.
+         *
+         * > NOTE: To be clear this is called after the cell
+         * > has been edited and saved.
+         */
+        public OnEdit(callBack: OnEditCallback): void
+        {
+            this.onEditCallBacks.push(callBack);
         }
 
         /**
@@ -189,6 +205,43 @@ module SexyTable
             {
                 this.table.Refresh();
             }
+
+            // Grab the row number or id of the row if it has one.
+            var row: number;
+            if (cell.parents('ul[id]').length == 1)
+            {
+                // The assumption is that this ID will reflect the same ID
+                // used on the server in the database. This is how I setup my
+                // transparency directives anyway.
+                row = parseInt(cell.parents('ul[id]').attr('id'));
+            }
+            else
+            {
+                // This will be a 0 based number of the row
+                row = this.container.find('.tbody').find('ul').index
+                (
+                    cell.parents('ul')
+                );
+            }
+
+            // Grab the column heading, we will pass this on to the callbacks.
+            var col = this.table.GetReader().GetHeading(cell);
+
+            // Run any OnEdit callbacks
+            this.onEditCallBacks.forEach(function(callback)
+            {
+                callback(row, col, data, cell);
+            });
         }
+    }
+
+    interface OnEditCallback
+    {
+        (
+            row: number,
+            col: string,
+            value: string,
+            cell: JQuery
+        ): void;
     }
 }
