@@ -235,7 +235,7 @@ module SexyTable
         }
     }
 
-    interface OnEditCallback
+    export interface OnEditCallback
     {
         (
             row: number,

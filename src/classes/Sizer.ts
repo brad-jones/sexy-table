@@ -511,7 +511,7 @@ module SexyTable
         }
     }
 
-    interface ColWidths
+    export interface ColWidths
     {
         widths: Array<number>;
         min: number;
