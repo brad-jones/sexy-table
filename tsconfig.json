@@ -13,6 +13,7 @@
     },
     "filesGlob": [
         "./**/*.ts",
+        "!./dist/**/*.*",
         "!./typings/**/*.d.ts",
         "./typings/custom.d.ts",
         "!./node_modules/**/*.ts"
