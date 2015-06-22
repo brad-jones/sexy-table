@@ -6,6 +6,9 @@
   ],
   "description": "A good looking HTML5 table that's not a table :)",
   "main": "dist/SexyTable.js",
+  "typescript": {
+    "definition": "dist/SexyTable.d.ts"
+  },
   "moduleType": [
     "globals"
   ],
