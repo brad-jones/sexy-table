@@ -68,11 +68,11 @@ __NPM:__
     npm install sexy-table --save
 
 __THEN:__
+```html
+<link rel="stylesheet" href="./dist/SexyTable.css" />
+<script src="./dist/SexyTable.js"></script>
+```
 
-    ```html
-    <link rel="stylesheet" href="./dist/SexyTable.css" />
-    <script src="./dist/SexyTable.js"></script>
-    ```
 > NOTE: TypeScript users may also reference the SexyTable.d.ts definitions file.
 >
 > __OR__
@@ -89,21 +89,21 @@ application.
 
 _It is up to you to include the packages as you need them:_
 
-    - All our examples use http://necolas.github.io/normalize.css/
-      Results may vary with other CSS Reset solutions.
+- All our examples use http://necolas.github.io/normalize.css/
+  Results may vary with other CSS Reset solutions.
 
-    - To support IE8, you must include https://github.com/brad-jones/lt-ie-9
-      or similar.
+- To support IE8, you must include https://github.com/brad-jones/lt-ie-9
+  or similar.
 
-    - Sortable Tables require http://fortawesome.github.io/Font-Awesome/
-      Or other CSS rules to set the icons.
+- Sortable Tables require http://fortawesome.github.io/Font-Awesome/
+  Or other CSS rules to set the icons.
 
-    - Searchable and Filterable tables require http://lunrjs.com/
+- Searchable and Filterable tables require http://lunrjs.com/
 
-    - Data Bound Tables make use of http://leonidas.github.io/transparency/
-      however similar view frameworks could be used easily enough.
+- Data Bound Tables make use of http://leonidas.github.io/transparency/
+  however similar view frameworks could be used easily enough.
 
-    - Editable Tables require Mousetrap https://craig.is/killing/mice.
+- Editable Tables require Mousetrap https://craig.is/killing/mice.
 
 __At a minimum you must include jQuery before SexyTable!__
 
@@ -113,24 +113,24 @@ Building:
 --------------------------------------------------------------------------------
 If you wish to build SexyTable from the TypeScript/Less sources:
 
-    - Install Gulp http://gulpjs.com/
+- Install Gulp http://gulpjs.com/
 
-    - Install Tsd http://definitelytyped.org/tsd/
+- Install Tsd http://definitelytyped.org/tsd/
 
-    - (Optional) Install & Setup your Fav Typescript IDE.
-      Highly recommend: https://atom.io/packages/atom-typescript
+- (Optional) Install & Setup your Fav Typescript IDE.
+  Highly recommend: https://atom.io/packages/atom-typescript
 
-    - ```git clone git@github.com:brad-jones/sexy-table.git```
+- ```git clone git@github.com:brad-jones/sexy-table.git```
 
-    - ```cd ./sexy-table```
+- ```cd ./sexy-table```
 
-    - ```npm setup```
+- ```npm setup```
 
-    - ```gulp```
+- ```gulp```
 
-    - Edit the sources as you see fit.
-      Gulp will watch for changes and compile
-      automatically for you.
+- Edit the sources as you see fit.
+  Gulp will watch for changes and compile
+  automatically for you.
 
 I Confess:
 --------------------------------------------------------------------------------
