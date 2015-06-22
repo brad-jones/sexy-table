@@ -57,6 +57,81 @@ The other features, sorting, searching, filtering and data binding are all
 built on top of this concept. Please see the [examples](/examples) folder
 for more info.
 
+Installation:
+--------------------------------------------------------------------------------
+__BOWER:__
+
+    bower install sexy-table --save
+
+__NPM:__
+
+    npm install sexy-table --save
+
+__THEN:__
+
+    ```html
+    <link rel="stylesheet" href="./dist/SexyTable.css" />
+    <script src="./dist/SexyTable.js"></script>
+    ```
+> NOTE: TypeScript users may also reference the SexyTable.d.ts definitions file.
+>
+> __OR__
+>
+> Make use of the _"tsd link"_ feature.
+> see: https://github.com/Definitelytyped/tsd#link-to-bundled-definitions
+
+Dependencies:
+--------------------------------------------------------------------------------
+To make use of all of SexyTable's great features there are a number of other
+third party dependencies. Instead of bundling these with SexyTable and forcing
+you to include large amounts of potentially unused javascript in your
+application.
+
+_It is up to you to include the packages as you need them:_
+
+    - All our examples use http://necolas.github.io/normalize.css/
+      Results may vary with other CSS Reset solutions.
+
+    - To support IE8, you must include https://github.com/brad-jones/lt-ie-9
+      or similar.
+
+    - Sortable Tables require http://fortawesome.github.io/Font-Awesome/
+      Or other CSS rules to set the icons.
+
+    - Searchable and Filterable tables require http://lunrjs.com/
+
+    - Data Bound Tables make use of http://leonidas.github.io/transparency/
+      however similar view frameworks could be used easily enough.
+
+    - Editable Tables require Mousetrap https://craig.is/killing/mice.
+
+__At a minimum you must include jQuery before SexyTable!__
+
+> NOTE: All the examples show you exactly what is required.
+
+Building:
+--------------------------------------------------------------------------------
+If you wish to build SexyTable from the TypeScript/Less sources:
+
+    - Install Gulp http://gulpjs.com/
+
+    - Install Tsd http://definitelytyped.org/tsd/
+
+    - (Optional) Install & Setup your Fav Typescript IDE.
+      Highly recommend: https://atom.io/packages/atom-typescript
+
+    - ```git clone git@github.com:brad-jones/sexy-table.git```
+
+    - ```cd ./sexy-table```
+
+    - ```npm setup```
+
+    - ```gulp```
+
+    - Edit the sources as you see fit.
+      Gulp will watch for changes and compile
+      automatically for you.
+
 I Confess:
 --------------------------------------------------------------------------------
 The table has no pre built sexy looking themes. In fact I have purposefully
