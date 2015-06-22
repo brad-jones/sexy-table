@@ -1,5 +1,7 @@
+var del = require('del');
 var path = require('path');
 var gulp = require('gulp');
+var merge = require('merge2');
 var rename = require('gulp-rename');
 var less = require('gulp-less');
 var ts = require('gulp-typescript');
@@ -7,24 +9,38 @@ var uglify = require('gulp-uglify');
 var uglifycss = require('gulp-uglifycss');
 var autoprefixer = require('gulp-autoprefixer');
 
-gulp.task('default', ['compile-ts', 'compile-less'], function()
+gulp.task('default', ['clean-build', 'compile-ts', 'compile-less'], function()
 {
     gulp.watch('./src/**/*.ts', ['compile-ts']);
     gulp.watch('./src/**/*.less', ['compile-less']);
 });
 
+gulp.task('clean-build', function (cb)
+{
+    del(['dist/**/*'], cb);
+});
+
 gulp.task('compile-ts', function()
 {
-    var tsProject = ts.createProject('tsconfig.json', {out: 'SexyTable.js'});
+    // Read in the TypeScript Project
+    var tsProject = ts.createProject('tsconfig.json',
+    {
+        out: 'SexyTable.js',
+        declarationFiles: true
+    });
 
-    return tsProject.src()
+    // Compile the TypeScript
+    var tsResult = tsProject.src().pipe(ts(tsProject));
 
-        // Compile the typescript to javascript
-        .pipe(ts(tsProject)).js
+    // Merge our 2 streams together
+    return merge
+    ([
+        // Output the TypeScript Definitions
+        tsResult.dts.pipe(gulp.dest('./dist')),
 
         // For some stupid reason we get a dot prefixing
         // the out filename if we don't do this.
-        .pipe(rename({ basename: 'SexyTable' }))
+        tsResult.js.pipe(rename({ basename: 'SexyTable' }))
 
         // Output the compiled unminified javascript
         .pipe(gulp.dest('./dist'))
@@ -33,9 +49,9 @@ gulp.task('compile-ts', function()
         .pipe(uglify())
         .pipe(rename({ extname: '.min.js' }))
         .pipe(gulp.dest('./dist'))
+    ]);
 
-        // TODO: Sourcemap...
-    ;
+    // TODO: Sourcemap...
 });
 
 gulp.task('compile-less', function()
