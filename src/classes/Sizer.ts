@@ -325,7 +325,7 @@ module SexyTable
             this.table.GetRows().each(function(rowNo, row)
             {
                 // Check if the row has overflown
-                if ($(row).prop('scrollHeight') > $(row).outerHeight())
+                if ($(row).prop('scrollHeight') > $(row).innerHeight())
                 {
                     // Add up the cell widths
                     var total = 0;
@@ -380,8 +380,8 @@ module SexyTable
                 // By how much is the row short?
                 var add = $(row).innerWidth() - total;
 
-                // Account for border
-                add = add - (that.GetColumnBorder() / 2);
+                // Account for border and padding
+                add = add - (that.GetColumnBorder() / 2) - that.GetRowPadding();
 
                 // If we have anything to add, lets add it
                 if (add > 0)
