@@ -331,7 +331,7 @@ declare module SexyTable {
         protected container: JQuery;
         /**
          * Give us the tables top level container element.
-         * And we will make ensure it's rows & cells are sized correctly.
+         * And we will ensure it's rows & cells are sized correctly.
          */
         constructor(table: Table);
         /**
@@ -364,8 +364,13 @@ declare module SexyTable {
          */
         protected CalculateRowHeight(row: Element): number;
         /**
+         * In some cases we end up with some spare space.
+         * Lets fill that spare space.
+         */
+        protected IncreaseLastColumn(): void;
+        /**
          * Even after all our fancy resizing we still end up
-         * with overflown in some cases rows.
+         * with overflown rows in some cases rows.
          *
          * This will be due to a number of reasons:
          *
@@ -380,16 +385,10 @@ declare module SexyTable {
          *   - Other maths errors that I may have made...
          *     If you find one help me fix it :)
          *
-         * Anyway this method will apply one last resize of the last column
-         * in the table to ensure everything fits... hopefully :)
+         * Anyway this method will apply one last resize of the table to ensure
+         * everything fits... hopefully :)
          */
         protected CheckForOverFlownRows(columns: any, recurse?: number): void;
-        /**
-         * At this point we know the table has no overflowing rows.
-         * However in some cases we end up with some spare space.
-         * This is due to scrollbars I believe...
-         */
-        protected IncreaseLastColumn(): void;
         /**
          * Calculates the minimum size of the table.
          */
@@ -407,6 +406,7 @@ declare module SexyTable {
         protected GetColWidths(col: Array<Element>): ColWidths;
         /**
          * Similar to GetColWidths but only returns the columns max width.
+         * Doesn't consider the inner either.
          */
         protected GetColumnWidth(col: Array<Element>): number;
         /**

@@ -24,16 +24,13 @@ module SexyTable
 
         /**
          * Give us the tables top level container element.
-         * And we will make ensure it's rows & cells are sized correctly.
+         * And we will ensure it's rows & cells are sized correctly.
          */
         public constructor(protected table: Table)
         {
             this.container = this.table.GetContainer();
-
             this.ForceResize();
-
             this.UnhideContainer();
-
             $(window).resize(this.ForceResize.bind(this));
         }
 
@@ -50,8 +47,8 @@ module SexyTable
             this.table.GetRows().css('height', 'auto');
             this.SetWidthOfColumns();
             this.SetHeightOfRows();
-            this.CheckForOverFlownRows(this.table.GetColumns());
             this.IncreaseLastColumn();
+            this.CheckForOverFlownRows(this.table.GetColumns());
         }
 
         /**
@@ -291,8 +288,39 @@ module SexyTable
         }
 
         /**
+         * In some cases we end up with some spare space.
+         * Lets fill that spare space.
+         */
+        protected IncreaseLastColumn(): void
+        {
+            // Scope hack
+            var that = this;
+
+            // Loop through each of the rows
+            this.table.GetRows().each(function(rowNo, row)
+            {
+                // Add up the cell widths
+                var total = 0;
+                $(row).find('li').each(function(cellNo, cell)
+                {
+                    total = total + $(cell).outerWidth(true);
+                });
+
+                // By how much is the row short?
+                var add = $(row).innerWidth() - total;
+
+                // If we have anything to add, lets add it
+                if (add > 0)
+                {
+                    var last = $(row).find('li').last();
+                    last.css('width', last.outerWidth(true) + add);
+                }
+            });
+        }
+
+        /**
          * Even after all our fancy resizing we still end up
-         * with overflown in some cases rows.
+         * with overflown rows in some cases rows.
          *
          * This will be due to a number of reasons:
          *
@@ -307,8 +335,8 @@ module SexyTable
          *   - Other maths errors that I may have made...
          *     If you find one help me fix it :)
          *
-         * Anyway this method will apply one last resize of the last column
-         * in the table to ensure everything fits... hopefully :)
+         * Anyway this method will apply one last resize of the table to ensure
+         * everything fits... hopefully :)
          */
         protected CheckForOverFlownRows(columns, recurse = 0): void
         {
@@ -325,7 +353,7 @@ module SexyTable
             this.table.GetRows().each(function(rowNo, row)
             {
                 // Check if the row has overflown
-                if ($(row).prop('scrollHeight') > $(row).innerHeight())
+                if ($(row).prop('scrollHeight') > $(row).outerHeight())
                 {
                     // Add up the cell widths
                     var total = 0;
@@ -355,41 +383,6 @@ module SexyTable
 
             // If we resized something we should recurse again.
             if (resized) this.CheckForOverFlownRows(columns, ++recurse);
-        }
-
-        /**
-         * At this point we know the table has no overflowing rows.
-         * However in some cases we end up with some spare space.
-         * This is due to scrollbars I believe...
-         */
-        protected IncreaseLastColumn(): void
-        {
-            // Scope hack
-            var that = this;
-
-            // Loop through each of the rows
-            this.table.GetRows().each(function(rowNo, row)
-            {
-                // Add up the cell widths
-                var total = 0;
-                $(row).find('li').each(function(cellNo, cell)
-                {
-                    total = total + $(cell).outerWidth(true);
-                });
-
-                // By how much is the row short?
-                var add = $(row).innerWidth() - total;
-
-                // Account for border and padding
-                add = add - (that.GetColumnBorder() / 2) - that.GetRowPadding();
-
-                // If we have anything to add, lets add it
-                if (add > 0)
-                {
-                    var last = $(row).find('li').last();
-                    last.css('width', last.outerWidth(true) + add);
-                }
-            });
         }
 
         /**
@@ -460,42 +453,12 @@ module SexyTable
             var max = Math.max.apply(null, widths);
             var diff = max - min;
 
-            // We have a column that has a minimum width and has no cells wider
-            // than that width. So we need to get the diff between the minimum
-            // width and the natural width of the column.
-            if (parseInt($(col[0]).css('min-width')) > 0 && diff == 0)
-            {
-                // Check if we have the width already calculated
-                if (typeof $(col[0]).data('min-width') === 'undefined')
-                {
-                    // Save and reset the min width value
-                    var tmp = $(col[0]).css('min-width');
-                    $(col[0]).css('min-width', '0');
-
-                    // Grab the natual width of the column
-                    min = $(col[0]).find('.inner').outerWidth(true) +
-                          this.GetColumnBorder();
-
-                    // Save the value for future recursions
-                    $(col[0]).data('min-width', min);
-
-                    // Put the min width value back as it was
-                    $(col[0]).css('min-width', tmp);
-                }
-                else
-                {
-                    min = $(col[0]).data('min-width');
-                }
-
-                // Using the new min value recalculate the diff
-                diff = max - min;
-            }
-
             return { widths: widths, min: min, max: max, diff: diff };
         }
 
         /**
          * Similar to GetColWidths but only returns the columns max width.
+         * Doesn't consider the inner either.
          */
         protected GetColumnWidth(col: Array<Element>): number
         {
