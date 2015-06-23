@@ -188,6 +188,10 @@ module SexyTable
                 if (this.container.find('.tbody[data-bind]').length == 1)
                 {
                     this.MakeWriteable();
+
+                    // Bail out at this point there is no point continuing
+                    // because the table only contains a template and no data.
+                    return;
                 }
             }
 
@@ -232,7 +236,7 @@ module SexyTable
         /**
          * Creates a new Editor for the table.
          */
-        public MakeEditable(): void
+        public MakeEditable(): Editor
         {
             if (this.editor != null) return;
 
@@ -246,13 +250,15 @@ module SexyTable
             }
 
             this.editor = new Editor(this);
+
+            return this.editor;
         }
 
         /**
          * Creates a new Pager for the table.
          * This allows the table to interact with a server backend.
          */
-        public MakePageable(nextCb: Function): void
+        public MakePageable(nextCb: Function): Pager
         {
             if (this.pager != null) return;
 
@@ -260,6 +266,8 @@ module SexyTable
             this.MakeWriteable();
 
             this.pager = new Pager(this, nextCb);
+
+            return this.pager;
         }
 
         /**
@@ -267,7 +275,7 @@ module SexyTable
          * This will allow tables to be created at runtime from JSON,
          * instead of existing HTML Markup.
          */
-        public MakeWriteable(): void
+        public MakeWriteable(): Writer
         {
             if (this.writer != null) return;
 
@@ -290,6 +298,8 @@ module SexyTable
             }
 
             this.writer = new Writer(this);
+
+            return this.writer;
         }
 
         /**
@@ -318,7 +328,7 @@ module SexyTable
         /**
          * Programatically make a table sortable.
          */
-        public MakeSortable(): void
+        public MakeSortable(): Sorter
         {
             if (this.sorter != null) return;
 
@@ -331,12 +341,14 @@ module SexyTable
             }
 
             this.sorter = new Sorter(this);
+
+            return this.sorter;
         }
 
         /**
          * Programatically make a table searchable.
          */
-        public MakeSearchable(): void
+        public MakeSearchable(): Searcher
         {
             if (this.searcher != null) return;
 
@@ -352,12 +364,14 @@ module SexyTable
             }
 
             this.searcher = new Searcher(this);
+
+            return this.searcher;
         }
 
         /**
          * Programatically make a table filterable.
          */
-        public MakeFilterable(): void
+        public MakeFilterable(): Filterer
         {
             if (this.filterer != null) return;
 
@@ -373,6 +387,8 @@ module SexyTable
             }
 
             this.filterer = new Filterer(this);
+
+            return this.filterer;
         }
 
         /**

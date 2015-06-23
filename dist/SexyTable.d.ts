@@ -595,18 +595,18 @@ declare module SexyTable {
         /**
          * Creates a new Editor for the table.
          */
-        MakeEditable(): void;
+        MakeEditable(): Editor;
         /**
          * Creates a new Pager for the table.
          * This allows the table to interact with a server backend.
          */
-        MakePageable(nextCb: Function): void;
+        MakePageable(nextCb: Function): Pager;
         /**
          * Create a new Writer for the table.
          * This will allow tables to be created at runtime from JSON,
          * instead of existing HTML Markup.
          */
-        MakeWriteable(): void;
+        MakeWriteable(): Writer;
         /**
          * Each LI element represents a cell of the table.
          * However for various styling reasons we need to insert an inner
@@ -617,15 +617,15 @@ declare module SexyTable {
         /**
          * Programatically make a table sortable.
          */
-        MakeSortable(): void;
+        MakeSortable(): Sorter;
         /**
          * Programatically make a table searchable.
          */
-        MakeSearchable(): void;
+        MakeSearchable(): Searcher;
         /**
          * Programatically make a table filterable.
          */
-        MakeFilterable(): void;
+        MakeFilterable(): Filterer;
         /**
          * Given an array of either serialized rows as created by the Reader.
          * Or an array of DOM Elements, this will empty the contents of the

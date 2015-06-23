@@ -1387,6 +1387,9 @@ var SexyTable;
             if (typeof Transparency != 'undefined') {
                 if (this.container.find('.tbody[data-bind]').length == 1) {
                     this.MakeWriteable();
+                    // Bail out at this point there is no point continuing
+                    // because the table only contains a template and no data.
+                    return;
                 }
             }
             // It's important this runs early on as pretty much
@@ -1501,6 +1504,7 @@ var SexyTable;
                 throw new Error('Editable tables require mousetrap.js ' + 'see: https://craig.is/killing/mice');
             }
             this.editor = new SexyTable.Editor(this);
+            return this.editor;
         };
         /**
          * Creates a new Pager for the table.
@@ -1512,6 +1516,7 @@ var SexyTable;
             // Pageable tables must be writeable
             this.MakeWriteable();
             this.pager = new SexyTable.Pager(this, nextCb);
+            return this.pager;
         };
         /**
          * Create a new Writer for the table.
@@ -1528,6 +1533,7 @@ var SexyTable;
                 throw new Error('Writeable tables require a tbody container ' + 'that contains a transparency template.');
             }
             this.writer = new SexyTable.Writer(this);
+            return this.writer;
         };
         /**
          * Each LI element represents a cell of the table.
@@ -1560,6 +1566,7 @@ var SexyTable;
                 this.container.addClass('sortable');
             }
             this.sorter = new SexyTable.Sorter(this);
+            return this.sorter;
         };
         /**
          * Programatically make a table searchable.
@@ -1573,6 +1580,7 @@ var SexyTable;
                 throw new Error('Searchable tables require Lunr! ' + 'Get it from http://lunrjs.com/');
             }
             this.searcher = new SexyTable.Searcher(this);
+            return this.searcher;
         };
         /**
          * Programatically make a table filterable.
@@ -1589,6 +1597,7 @@ var SexyTable;
                 this.container.addClass('filterable');
             }
             this.filterer = new SexyTable.Filterer(this);
+            return this.filterer;
         };
         /**
          * Given an array of either serialized rows as created by the Reader.
