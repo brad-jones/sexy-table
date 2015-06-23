@@ -188,10 +188,6 @@ module SexyTable
                 if (this.container.find('.tbody[data-bind]').length == 1)
                 {
                     this.MakeWriteable();
-
-                    // Bail out at this point there is no point continuing
-                    // because the table only contains a template and no data.
-                    return;
                 }
             }
 
