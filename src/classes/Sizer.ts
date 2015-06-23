@@ -50,114 +50,207 @@ module SexyTable
             this.table.GetRows().css('height', 'auto');
             this.SetWidthOfColumns();
             this.SetHeightOfRows();
-            this.FixLastColumn();
+            this.CheckForOverFlownRows(this.table.GetColumns());
+            this.IncreaseLastColumn();
         }
 
         /**
-         * Even after all our fancy resizing we still end up with the last
-         * column being too big and overflowing or not bigger enough and
-         * leaving some spare space unallocated.
+         * Sets the width of each of the columns in the table.
          *
-         * This will be due to a number of reasons:
-         *
-         *   - Rounding Errors, diffrent browsers do this better than others.
-         *     Also I believe jQuery plays a role in the rounding of width and
-         *     height values.
-         *
-         *   - Margins, Paddings & Boarders that have not been accounted for.
-         *     Over time hopefully we will be able to catch more and more of
-         *     these special cases.
-         *
-         *   - Other maths errors that I may have made...
-         *     If you find one help me fix it :)
-         *
-         * Anyway this method will apply one last resize of the last column
-         * in the table to ensure everything fits... hopefully :)
+         * This turned out to be much more complex that I first thought.
+         * I'm sure this method is not as efficent as it could be but for
+         * now it works.
          */
-        protected FixLastColumn(): void
+        protected SetWidthOfColumns(): void
         {
-            //  Well guess what, it turns out that this method only runs in IE.
-            //  And the IncreaseLastColumn method only runs in Chrome.
-            //  Yet to test in other browsers...
-            if (!this.DecreaseLastColumn())
+            // Get all our cells grouped by columns
+            var columns = this.table.GetColumns();
+
+            // Grab the natural width of each column
+            var colWidths = [];
+            columns.forEach(function(col)
             {
-                // Only run this if we didn't do any decreasing
-                // otherwise we are just undoing our work.
-                this.IncreaseLastColumn();
-            }
-        }
+                var maxWidth = -1;
 
-        /**
-         * In the event the last column is too wide to fit into
-         * the table this will shrink it so that it hopefully fits.
-         *
-         * > NOTE: There is a small range of widths between the minimum size of
-         * > the table and when the table container is set to 100% width that
-         * > IE still fails and displays a broken table. ITS MOST ANNOYING!!!
-         */
-        protected DecreaseLastColumn(rescurse = 0): boolean
-        {
-            // Make sure we don't recurse forever.
-            // In IE at least it only appears to be the border that we need to
-            // remove. I'm guessing it's a slight diffrence in how border box
-            // sizing is calulated.
-            if (rescurse > this.GetColumnBorder() * 2) return;
-
-            // Assume we havn't resized anything for now.
-            var resized = false;
-
-            // Loop through each row, check if it's overflown,
-            // if it is remove a pixel from the last column.
-            this.container.find('ul').each(function(rowNo, row)
-            {
-                if ($(row).prop('scrollHeight') > $(row).outerHeight())
+                col.forEach(function(cell)
                 {
-                    var cell = $(row).find('li').last();
-                    cell.css('width', cell.outerWidth(true) - 1);
-                    resized = true;
-                }
+                    var cellWidth = $(cell).outerWidth(true);
+
+                    if (cellWidth > maxWidth)
+                    {
+                        maxWidth = cellWidth;
+                    }
+                }, this);
+
+                colWidths.push(maxWidth);
+            }, this);
+
+            // Sum up the widths
+            var totalWidth = colWidths.reduce(function(a, b){ return a + b}, 0);
+
+            // Now convert the column widths into percentages
+            columns.forEach(function(col, colNo)
+            {
+                var width = (colWidths[colNo] / totalWidth * 100) + '%';
+                col.forEach(function(cell){ $(cell).css('width', width); });
             });
 
-            // If we had to perform any resizing above, lets run again.
-            if (resized) this.DecreaseLastColumn(++rescurse);
+            // At this point the columns are sized with the correct ratios.
+            // However we can obviously run into the issue where a cell
+            // overflows. In this case we need to increase the width of the
+            // column that the overflown cell belongs to but then remove the
+            // width from other columns. This calculates the amount of width
+            // that needs to be removed from the table.
+            var remove = 0;
 
-            return resized;
-        }
-
-        /**
-         * The counter part to DecreaseLastColumn.
-         * In Chrome I have found that the last column is actually too small
-         * sometimes. This will smartly add extra width to the last column
-         * so that it takes up all avaliable space.
-         */
-        protected IncreaseLastColumn(): void
-        {
-            // Grab the column border value
-            var border = this.GetColumnBorder();
-
-            var padding = this.GetRowPadding();
-
-            // Loop through each row
-            this.container.find('ul').each(function(rowNo, row)
+            this.table.GetColumns().forEach(function(col, colNo)
             {
-                // Sum up all the widths of the cells
-                var width = 0;
-                $(row).find('li').each(function(cellNo, cell)
+                // Get all the inner widths of each cell in the column.
+                var widths = this.GetColWidths(col);
+
+                // Add the diff to the total amount we need to remove.
+                remove = remove + widths.diff;
+
+                // Set the width of each cell in the column to the maximum.
+                // This lines up the cells in the column and converts the
+                // percentage width into a pixel value. From this point forward
+                // we work with pixels.
+                col.forEach(function(cell)
                 {
-                    width = width + $(cell).outerWidth(true);
+                    $(cell).css('width', widths.max);
                 });
+            }, this);
 
-                // Get the diffrence between the calculated
-                // width and the actual width of the row.
-                var diff = $(row).innerWidth() - width;
+            // Now we need to adjust the size of the columns in the table so
+            // everything fits. This is a recursive process until we have no
+            // more columns to resize.
+            this.ReDistributeWidth(remove, columns);
+        }
 
-                // Account for any border / padding
-                diff = diff - border - padding;
+        /**
+         * Given an amount of width to remove and a set of columns to remove it
+         * from. This will resize the columns in the table so that everything
+         * fits.
+         */
+        protected ReDistributeWidth(remove: number, columns: Array<Array<Element>>): void
+        {
+            // The amount of width we need to remove from each column.
+            var removePerCol = remove / this.GetResizeableCols();
 
-                // Increase the cell by the diffrence
-                var last = $(row).find('li').last();
-                last.css('width', last.outerWidth(true) + diff);
-            });
+            // In some cases we may reach the minimum size of a cell / column.
+            // This is a taly of the number of pixels we failed to remove.
+            var failedToRemove = 0;
+
+            // Loop through the columns
+            for (var colNo = 0; colNo < columns.length; colNo++)
+            {
+                var column = columns[colNo];
+
+                // We can't resize this column, so skip it.
+                if ($(column[0]).data('dont-resize') === true) continue;
+
+                // Grab the current column width
+                var currentColumnWidth = this.GetColumnWidth(column);
+
+                // Calculate the new width of the column that we are aiming for.
+                // NOTE: This is the width we WANT but may NOT get.
+                var idealColumnWidth = currentColumnWidth - removePerCol;
+
+                // If the total amount to remove is less than 1 then we only
+                // need to remove 1 pixel from one column. Removing less than 1
+                // pixel doesn't really work - no such thing as half a pixel.
+                if (remove <= 1)
+                {
+                    idealColumnWidth = currentColumnWidth - 1;
+                }
+
+                // This will be the minimum width of the column,
+                // if we reach it's minimum width that is.
+                var columnMinimumWidth = -1;
+
+                // Loop through each cell in the column and attempt to resize it
+                for (var cellNo = 0; cellNo < column.length; cellNo++)
+                {
+                    var cell = column[cellNo];
+
+                    // Set the new width of the cell
+                    $(cell).css('width', idealColumnWidth);
+
+                    // Check if the cell has overflown.
+                    var innerWidth = $(cell).find('.inner').outerWidth(true);
+                    if (innerWidth > idealColumnWidth)
+                    {
+                        // This cell has reached it's minimum size.
+                        $(cell).css('width', innerWidth);
+
+                        // Only update the column minimum width
+                        // if it's larger than the previous value.
+                        if (innerWidth > columnMinimumWidth)
+                        {
+                            columnMinimumWidth = innerWidth;
+                        }
+                    }
+                }
+
+                // Set the new column width, this lines up the cells again.
+                var newColumnWidth = this.GetColumnWidth(column);
+                for (var cellNo = 0; cellNo < column.length; cellNo++)
+                {
+                    $(column[cellNo]).css('width', newColumnWidth);
+                }
+
+                // Once a column has reached it's minimum size,
+                // ensure we do not attempt to resize it again.
+                if (columnMinimumWidth > 0)
+                {
+                    $(column[0]).data('dont-resize', true);
+
+                    // The total amount to remove was less than 1px but we
+                    // failed to remove it from this column. As there are more
+                    // columns left that are resizeable we don't want to add
+                    // the 1px to the failedToRemove tally.
+                    if (remove <= 1 && this.GetResizeableCols() > 0)
+                    {
+                        continue;
+                    }
+
+                    // It also means that we were unable
+                    // to remove some width from the table.
+                    failedToRemove = failedToRemove +
+                    (
+                        columnMinimumWidth - idealColumnWidth
+                    );
+                }
+                else
+                {
+                    // The total amount to remove was less than 1px and we
+                    // successfully managed to remove that one pixel. So we
+                    // do not need to loop through rest of the columns.
+                    if (remove <= 1)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            // Do we still have pixels to remove from the table?
+            if (failedToRemove > 0)
+            {
+                // Do we have have resizeable columns left?
+                if (this.GetResizeableCols() > 0)
+                {
+                    // We have at least one resizeable column
+                    // left so lets run ourselves again.
+                    this.ReDistributeWidth(failedToRemove, columns);
+                }
+                else
+                {
+                    // Set the minimum width of the table.
+                    // The table will now overflow it's parent
+                    // just like a real table would.
+                    this.container.css('width', this.GetMinimumTableSize());
+                }
+            }
         }
 
         /**
@@ -198,175 +291,130 @@ module SexyTable
         }
 
         /**
-         * Sets the width of each of the columns in the table.
-         * This turned out to be much more complex that I first thought.
-         * This method does have some duplicated code and I'm sure it's not as
-         * efficent as it could be but for now it works.
+         * Even after all our fancy resizing we still end up
+         * with overflown in some cases rows.
          *
-         * > TODO: At some point refactor this and code for performance.
+         * This will be due to a number of reasons:
+         *
+         *   - Rounding Errors, diffrent browsers do this better than others.
+         *     Also I believe jQuery plays a role in the rounding of width and
+         *     height values.
+         *
+         *   - Margins, Paddings & Boarders that have not been accounted for.
+         *     Over time hopefully we will be able to catch more and more of
+         *     these special cases.
+         *
+         *   - Other maths errors that I may have made...
+         *     If you find one help me fix it :)
+         *
+         * Anyway this method will apply one last resize of the last column
+         * in the table to ensure everything fits... hopefully :)
          */
-        protected SetWidthOfColumns(): void
+        protected CheckForOverFlownRows(columns, recurse = 0): void
         {
-            // Get all our cells grouped by columns
-            var columns = this.table.GetColumns();
-
-            // Grab the natural width of each column
-            var colWidths = [];
-            columns.forEach(function(col)
-            {
-                var maxWidth = -1;
-
-                col.forEach(function(cell)
-                {
-                    var cellWidth = $(cell).outerWidth(true);
-
-                    if (cellWidth > maxWidth)
-                    {
-                        maxWidth = cellWidth;
-                    }
-                }, this);
-
-                colWidths.push(maxWidth);
-            }, this);
-
-            // Sum up the widths
-            var totalWidth = colWidths.reduce(function(a, b){ return a + b}, 0);
-
-            // Now convert the column widths into percentages
-            columns.forEach(function(col, colNo)
-            {
-                var width = (colWidths[colNo] / totalWidth * 100) + '%';
-                col.forEach(function(cell){ $(cell).css('width', width); });
-            });
-
-            // At this point the columns are sized with the correct ratios.
-            // However we can obviously run into the issue where a cell
-            // overflows. In this case we need to increase the width of the
-            // column that the overflown cell belongs to but then remove the
-            // width from other columns. This is a recursive process until we
-            // have no more columns to resize.
+            // Because IE is stupid!
+            if (recurse > 10) return;
 
             // Scope hack
             var that = this;
 
-            // This is our recursive function, it's long and complicated.
-            // I'll try and comment it as much as possible.
-            var recursive = function()
+            // Assume we havn't resized anything for now
+            var resized = false;
+
+            // Loop through each of the rows
+            this.table.GetRows().each(function(rowNo, row)
             {
-                // The number of pixels we need to remove
-                // from the width of the table.
-                var remove = 0;
-
-                columns.forEach(function(col, colNo)
+                // Check if the row has overflown
+                if ($(row).prop('scrollHeight') > $(row).outerHeight())
                 {
-                    // Get all the inner widths of each cell in the column
-                    var widths = that.GetColWidths(col);
-
-                    // Add the diff to the total amount we need to remove.
-                    remove = remove + widths.diff;
-
-                    // Set the width of each cell in the column to the maximum
-                    col.forEach(function(cell)
+                    // Add up the cell widths
+                    var total = 0;
+                    $(row).find('li').each(function(cellNo, cell)
                     {
-                        if ($(cell).data('dont-resize') !== true)
-                        {
-                            $(cell).css('width', widths.max);
-                        }
-
-                        if (widths.diff > 0)
-                        {
-                            $(cell).data('dont-resize', true);
-                        }
-                    });
-                });
-
-                // Work out how many columns we have that are still resizeable
-                var resizeable_cols = that.GetResizeableCols();
-
-                // Calculate the amount of width we need to
-                // remove from each column.
-                remove = remove / resizeable_cols;
-
-                // In some cases we may find our selves with nothing
-                // at all to resize. When this is set to true we have
-                // reached the smallest size possible for the table.
-                var nothingLeftToResize = true;
-
-                columns.forEach(function(col, colNo)
-                {
-                    col.forEach(function(cell)
-                    {
-                        if ($(cell).data('dont-resize') !== true)
-                        {
-                            // We found a cell that we can resize
-                            nothingLeftToResize = false;
-
-                            // Set the new width of the cell
-                            var newWidth = $(cell).outerWidth(true) - remove;
-                            $(cell).css('width', newWidth);
-
-                            // Check if we have overflown content.
-                            var innerWidth = $(cell).find('.inner').outerWidth(true);
-                            if (innerWidth > newWidth)
-                            {
-                                if (resizeable_cols > 1)
-                                {
-                                    // We have a cell that has overflown and we
-                                    // have more than one resizeable column so
-                                    // we will run ourselves again.
-                                    recursive();
-                                }
-                                else
-                                {
-                                    // We have reached the minimum size of the
-                                    // table. Thus we will set the widths of the
-                                    // last resizeable column.
-                                    col.forEach(function(cell1)
-                                    {
-                                        $(cell1).css('width', innerWidth);
-                                        $(cell1).data('dont-resize', true);
-                                    });
-
-                                    // We have to do it twice so that we get the
-                                    // correct size for the entire column.
-                                    var finalWidth = that.GetColWidths(col).max;
-                                    col.forEach(function(cell1)
-                                    {
-                                        $(cell1).css('width', finalWidth);
-                                    });
-
-                                    // Make sure the minium table size gets set
-                                    nothingLeftToResize = true;
-                                }
-                            }
-                        }
-                    });
-                });
-
-                if (nothingLeftToResize)
-                {
-                    // Add up all the current column widths.
-                    var minimumSize = 0;
-                    var row = that.table.GetRows().first();
-                    row.find('li').each(function(index, el)
-                    {
-                        minimumSize = minimumSize + $(el).outerWidth(true);
+                        total = total + $(cell).outerWidth(true);
                     });
 
-                    // Account for any border
-                    minimumSize = minimumSize + (that.GetColumnBorder() * 2);
+                    // By how much has the row overflown?
+                    var remove = total - $(row).innerWidth();
 
-                    // Account for padding applied to the row
-                    minimumSize = minimumSize + that.GetRowPadding();
+                    // Because IE is stupid again!
+                    if (remove < 1) remove = that.GetColumnBorder();
 
-                    // Set the overall width of the sexy table.
-                    // It will now overflow it's parent container
-                    // just like a real table.
-                    that.container.css('width', minimumSize);
+                    // Guess what it's time to remove some more width
+                    that.ReDistributeWidth(remove, columns);
+
+                    // Now that we have adjusted the column widths
+                    // we need to recalculate the rows height.
+                    $(row).css('height', 'auto');
+                    $(row).css('height', that.CalculateRowHeight(row));
+
+                    // Make sure we check again that we have no rows overflowing
+                    resized = true;
                 }
-            };
+            });
 
-            recursive();
+            // If we resized something we should recurse again.
+            if (resized) this.CheckForOverFlownRows(columns, ++recurse);
+        }
+
+        /**
+         * At this point we know the table has no overflowing rows.
+         * However in some cases we end up with some spare space.
+         * This is due to scrollbars I believe...
+         */
+        protected IncreaseLastColumn(): void
+        {
+            // Scope hack
+            var that = this;
+
+            // Loop through each of the rows
+            this.table.GetRows().each(function(rowNo, row)
+            {
+                // Add up the cell widths
+                var total = 0;
+                $(row).find('li').each(function(cellNo, cell)
+                {
+                    total = total + $(cell).outerWidth(true);
+                });
+
+                // By how much is the row short?
+                var add = $(row).innerWidth() - total;
+
+                // Account for border
+                add = add - (that.GetColumnBorder() / 2);
+
+                // If we have anything to add, lets add it
+                if (add > 0)
+                {
+                    var last = $(row).find('li').last();
+                    last.css('width', last.outerWidth(true) + add);
+                }
+            });
+        }
+
+        /**
+         * Calculates the minimum size of the table.
+         */
+        protected GetMinimumTableSize(): number
+        {
+            var minimum = 0, border = this.GetColumnBorder();
+
+            var row = this.table.GetRows().first();
+            row.find('li').each(function(cellNo, cell)
+            {
+                minimum = minimum + $(cell).find('.inner').outerWidth(true);
+
+                // Account for border
+                minimum = minimum + border;
+            });
+
+            // Account for padding applied to the row
+            minimum = minimum + this.GetRowPadding();
+
+            // Add the border again for IE
+            minimum = minimum + border;
+
+            return minimum;
         }
 
         /**
@@ -375,22 +423,17 @@ module SexyTable
          */
         protected GetResizeableCols(): number
         {
+            var columns = this.table.GetColumns();
+
             var resizeable_cols = this.GetNumberOfCols();
 
-            this.table.GetColumns().forEach(function(col, colNo)
+            for (var i = 0; i < columns.length; i++)
             {
-                var dontRezise = false;
-
-                col.forEach(function(cell)
+                if ($(columns[i][0]).data('dont-resize') === true)
                 {
-                    if ($(cell).data('dont-resize') === true)
-                    {
-                        dontRezise = true;
-                    }
-                });
-
-                if (dontRezise) --resizeable_cols;
-            });
+                    --resizeable_cols;
+                }
+            }
 
             return resizeable_cols;
         }
@@ -449,6 +492,21 @@ module SexyTable
             }
 
             return { widths: widths, min: min, max: max, diff: diff };
+        }
+
+        /**
+         * Similar to GetColWidths but only returns the columns max width.
+         */
+        protected GetColumnWidth(col: Array<Element>): number
+        {
+            var widths = [];
+
+            for (var i = 0; i < col.length; i++)
+            {
+                widths.push($(col[i]).outerWidth(true));
+            }
+
+            return Math.max.apply(null, widths);
         }
 
         /**

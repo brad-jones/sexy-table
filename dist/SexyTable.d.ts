@@ -341,9 +341,31 @@ declare module SexyTable {
          */
         ForceResize(): void;
         /**
-         * Even after all our fancy resizing we still end up with the last
-         * column being too big and overflowing or not bigger enough and
-         * leaving some spare space unallocated.
+         * Sets the width of each of the columns in the table.
+         *
+         * This turned out to be much more complex that I first thought.
+         * I'm sure this method is not as efficent as it could be but for
+         * now it works.
+         */
+        protected SetWidthOfColumns(): void;
+        /**
+         * Given an amount of width to remove and a set of columns to remove it
+         * from. This will resize the columns in the table so that everything
+         * fits.
+         */
+        protected ReDistributeWidth(remove: number, columns: Array<Array<Element>>): void;
+        /**
+         * Loops through all rows in the table and sets their height.
+         */
+        protected SetHeightOfRows(): void;
+        /**
+         * Given a UL row element this will loop through all it's LI cells
+         * and calculate the rows maximum height.
+         */
+        protected CalculateRowHeight(row: Element): number;
+        /**
+         * Even after all our fancy resizing we still end up
+         * with overflown in some cases rows.
          *
          * This will be due to a number of reasons:
          *
@@ -361,41 +383,17 @@ declare module SexyTable {
          * Anyway this method will apply one last resize of the last column
          * in the table to ensure everything fits... hopefully :)
          */
-        protected FixLastColumn(): void;
+        protected CheckForOverFlownRows(columns: any, recurse?: number): void;
         /**
-         * In the event the last column is too wide to fit into
-         * the table this will shrink it so that it hopefully fits.
-         *
-         * > NOTE: There is a small range of widths between the minimum size of
-         * > the table and when the table container is set to 100% width that
-         * > IE still fails and displays a broken table. ITS MOST ANNOYING!!!
-         */
-        protected DecreaseLastColumn(rescurse?: number): boolean;
-        /**
-         * The counter part to DecreaseLastColumn.
-         * In Chrome I have found that the last column is actually too small
-         * sometimes. This will smartly add extra width to the last column
-         * so that it takes up all avaliable space.
+         * At this point we know the table has no overflowing rows.
+         * However in some cases we end up with some spare space.
+         * This is due to scrollbars I believe...
          */
         protected IncreaseLastColumn(): void;
         /**
-         * Loops through all rows in the table and sets their height.
+         * Calculates the minimum size of the table.
          */
-        protected SetHeightOfRows(): void;
-        /**
-         * Given a UL row element this will loop through all it's LI cells
-         * and calculate the rows maximum height.
-         */
-        protected CalculateRowHeight(row: Element): number;
-        /**
-         * Sets the width of each of the columns in the table.
-         * This turned out to be much more complex that I first thought.
-         * This method does have some duplicated code and I'm sure it's not as
-         * efficent as it could be but for now it works.
-         *
-         * > TODO: At some point refactor this and code for performance.
-         */
-        protected SetWidthOfColumns(): void;
+        protected GetMinimumTableSize(): number;
         /**
          * Counts the number of columns in the table that
          * still have space to spare and can be resized.
@@ -407,6 +405,10 @@ declare module SexyTable {
          * for easy access to the results.
          */
         protected GetColWidths(col: Array<Element>): ColWidths;
+        /**
+         * Similar to GetColWidths but only returns the columns max width.
+         */
+        protected GetColumnWidth(col: Array<Element>): number;
         /**
          * To make sure we don't overflow any rows of the table.
          * We need to cater for any borders. This assumes that the
