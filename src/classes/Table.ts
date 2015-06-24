@@ -432,6 +432,8 @@ module SexyTable
             this.sizer.ForceResize();
 
             if (reSerialize) this.reader.Serialize();
+
+            if (this.HasEditor()) this.editor.ReAttachEventHandlers();
         }
 
         /**
