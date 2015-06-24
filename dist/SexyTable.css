@@ -64,21 +64,6 @@
 .sexy-table.sortable .thead .inner i {
   padding-left: 5px;
 }
-.sexy-table.editable .inner {
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
-  position: relative;
-}
-.sexy-table.editable .edit-prompt {
-  font-size: 0.7em;
-  color: #999999;
-  position: absolute;
-  top: 0px;
-  opacity: 0;
-  transition: opacity 0.5s linear;
-}
-.sexy-table.editable .edit-prompt.show {
-  opacity: 1;
+.sexy-table.editable .tbody input::-ms-clear {
+  display: none;
 }

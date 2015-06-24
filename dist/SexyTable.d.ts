@@ -27,7 +27,20 @@ declare module SexyTable {
          */
         protected onEditCallBacks: OnEditCallback[];
         /**
-         * Registers the editor events.
+         * A reference to our span mirror element, to help with width calcs.
+         */
+        protected mirror: JQuery;
+        /**
+         * Because the OnSave method is attached to many event handlers.
+         * We will ensure it runs onyl when it really needs to.
+         */
+        protected deBounceTimeout: number;
+        /**
+         * The number of milliseconds to wait before calling the OnSave method.
+         */
+        protected deBounceWait: number;
+        /**
+         * Editor Constructor
          */
         constructor(table: Table);
         /**
@@ -38,35 +51,35 @@ declare module SexyTable {
          */
         OnEdit(callBack: OnEditCallback): void;
         /**
+         * Inserts an Input Text Box into each Cell.
+         */
+        InsertEditFields(): void;
+        /**
+         * This is called after a table been ReDrawn.
+         *
+         * > NOTE: We do not need to worry about the Mousetrap events,
+         * > these appear to continue to work.
+         */
+        ReAttachEventHandlers(): void;
+        /**
          * Not all cells in the table should be editable.
          * Given a cell this will tell us if we are allowed to edit it or not.
          */
-        protected IsCellEditable(cell: JQuery): boolean;
-        /**
-         * Shows a prompt to the user to double click on the cell to edit it.
-         */
-        protected ShowEditPrompt(event: JQueryEventObject): void;
-        /**
-         * Removes the edit prompt when the mouse leaves the cell.
-         *
-         * > NOTE: We can't animate the remove (or more to the point I can't be
-         * > bothered right now) because when the double click event happens
-         * > it will also call this method to ensure the edit prompt is removed
-         * > before grabing the cells text content.
-         */
-        protected HideEditPrompt(event: JQueryEventObject): void;
-        /**
-         * This will run when any cell is double clicked.
-         */
-        protected OnCellDbClick(event: JQueryEventObject): void;
+        protected IsCellEditable(cell: Element): boolean;
         /**
          * This will grab the contents of the input field
-         * and place it back directly inside the cell.
+         * and update the table.
          *
          * > NOTE: This does not send any data back to the server!
          * > You must do this yourself with the Reader.
          */
-        protected OnSave(cell: JQuery): void;
+        protected OnSave(cell: JQuery): boolean;
+        /**
+         * Updates the given inputs width to reflect it's content.
+         *
+         * @credit https://github.com/MartinF/jQuery.Autosize.Input
+         */
+        protected SetWidthOfInput(index: number, input: Element): void;
     }
     interface OnEditCallback {
         (row: number, col: string, value: string, cell: JQuery): void;

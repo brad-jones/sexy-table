@@ -59,7 +59,7 @@ var SexyTable;
      */
     var Editor = (function () {
         /**
-         * Registers the editor events.
+         * Editor Constructor
          */
         function Editor(table) {
             this.table = table;
@@ -67,16 +67,20 @@ var SexyTable;
              * An array of callbacks, that will be run upon a cell being edited.
              */
             this.onEditCallBacks = new Array();
+            /**
+             * The number of milliseconds to wait before calling the OnSave method.
+             */
+            this.deBounceWait = 250;
             this.container = this.table.GetContainer();
-            // Attach the double click event to the entire table.
-            // But filtered to each cell of the table, this way when new
-            // cells are added to the table we don't have to add new event
-            // handlers.
-            this.container.on('dblclick', '.inner', this.OnCellDbClick.bind(this));
-            // Because it's not obvious straight away that a cell can be edited.
-            // We will prompt the user when the mouse hovers over a cell.
-            this.container.on('mouseenter', '.inner', this.ShowEditPrompt.bind(this));
-            this.container.on('mouseleave', '.inner', this.HideEditPrompt.bind(this));
+            this.mirror = $('<span />');
+            this.mirror.css({
+                'position': 'absolute',
+                'top': '-999px',
+                'left': '0px',
+                'white-space': 'pre'
+            });
+            $("body").append(this.mirror);
+            this.InsertEditFields();
         }
         /**
          * Registers an OnEdit Callback.
@@ -88,124 +92,173 @@ var SexyTable;
             this.onEditCallBacks.push(callBack);
         };
         /**
+         * Inserts an Input Text Box into each Cell.
+         */
+        Editor.prototype.InsertEditFields = function () {
+            // Scope hack.
+            var that = this;
+            // Loop through each cell in the table.
+            this.table.GetCells().each(function (cellNo, cell) {
+                // Bail out if we can't edit this cell
+                if (!that.IsCellEditable(cell))
+                    return;
+                // Bail out if the cell already has an input field
+                if ($(cell).find('input').length > 0)
+                    return;
+                // Grab the inner
+                var inner = $(cell).find('.inner');
+                // Grab the contents of the cell
+                var data = inner.text();
+                // Create a new input field
+                var input = $('<input />');
+                input.attr('type', 'text');
+                input.val(data);
+                // Create the save callback
+                var save = that.OnSave.bind(that, inner);
+                // Bind some keyboard shortcuts to the save handler
+                //
+                // > NOTE: I am debating if we really need this,
+                // > now that we save on keyup...
+                Mousetrap(input[0]).bind(['enter', 'mod+s'], save);
+                // On keyup call the save handler
+                input.keyup(save);
+                // Replace the contents of the cell with our new input field
+                inner.empty().append(input);
+            });
+        };
+        /**
+         * This is called after a table been ReDrawn.
+         *
+         * > NOTE: We do not need to worry about the Mousetrap events,
+         * > these appear to continue to work.
+         */
+        Editor.prototype.ReAttachEventHandlers = function () {
+            this.table.GetCells().parents('.tbody').find('input').each((function (inputNo, input) {
+                $(input).keyup(this.OnSave.bind(this, $(input).parents('.inner')));
+            }).bind(this));
+        };
+        /**
          * Not all cells in the table should be editable.
          * Given a cell this will tell us if we are allowed to edit it or not.
          */
         Editor.prototype.IsCellEditable = function (cell) {
             // Editing column headings seems like a dangerous thing.
-            if (cell.parents('.thead').length > 0)
+            if ($(cell).parents('.thead').length > 0)
                 return false;
-            // Can't edit cells that have explicitly been set not be editable
-            if (cell.parents('li').data('no-edit') === true)
+            // Can't edit cells that have explicitly been set not be editable.
+            if ($(cell).data('no-edit') === true)
                 return false;
+            // Can't edit cells without a column heading
+            var inner = $(cell).find('.inner');
+            var heading = this.table.GetReader().GetHeading(inner);
+            if (typeof heading === 'undefined')
+                return false;
+            if (heading === '')
+                return false;
+            // If we get to here we assume the cell is editable.
             return true;
         };
         /**
-         * Shows a prompt to the user to double click on the cell to edit it.
-         */
-        Editor.prototype.ShowEditPrompt = function (event) {
-            // Grab the cell
-            var cell = $(event.currentTarget);
-            // Bail out if we can't edit this cell
-            if (!this.IsCellEditable(cell))
-                return;
-            // Add the edit prompt
-            var prompt = $('<p />');
-            prompt.addClass('edit-prompt');
-            prompt.append($('<i class="fa fa-pencil-square-o"></i>'));
-            prompt.append(' Double Click to Edit Me!');
-            cell.append(prompt);
-            // We are using CSS3 to animate opacity and thus need add the
-            // class in a new thread otherwise the animation does not run.
-            setTimeout(function () {
-                prompt.addClass('show');
-            }, 0);
-        };
-        /**
-         * Removes the edit prompt when the mouse leaves the cell.
-         *
-         * > NOTE: We can't animate the remove (or more to the point I can't be
-         * > bothered right now) because when the double click event happens
-         * > it will also call this method to ensure the edit prompt is removed
-         * > before grabing the cells text content.
-         */
-        Editor.prototype.HideEditPrompt = function (event) {
-            $(event.currentTarget).find('.edit-prompt').remove();
-        };
-        /**
-         * This will run when any cell is double clicked.
-         */
-        Editor.prototype.OnCellDbClick = function (event) {
-            // Scope hack
-            var that = this;
-            // Grab the cell
-            var cell = $(event.currentTarget);
-            // Bail out if we can't edit this cell
-            if (!this.IsCellEditable(cell))
-                return;
-            // Make sure the edit prompt it removed
-            cell.trigger('mouseleave');
-            // Grab the contents of the cell
-            var data = cell.text();
-            // Create a new input field to allow the user to edit the data
-            var input = $('<input />');
-            input.attr('type', 'text');
-            input.val(data);
-            // Create the save callback
-            var save = that.OnSave.bind(that, cell);
-            // Bind some keyboard shortcuts to the input box
-            Mousetrap(input[0]).bind(['enter', 'mod+s'], save);
-            // Also if the input loses focus call the save handler
-            input.focusout(save);
-            // Replace the contents of the cell with our new input field
-            cell.empty().append(input);
-            // Focus the input, ready for editing
-            input.focus();
-        };
-        /**
          * This will grab the contents of the input field
-         * and place it back directly inside the cell.
+         * and update the table.
          *
          * > NOTE: This does not send any data back to the server!
          * > You must do this yourself with the Reader.
          */
         Editor.prototype.OnSave = function (cell) {
-            // Grab the new edited data
-            var data = cell.find('input').val();
-            // Remove the input field and add the data back into the cell
-            cell.empty().text(data);
-            // Refresh the table
-            if (this.table.HasSearcher()) {
-                // If the table has a searcher, this includes filterable tables.
-                // We need to update the search index in a smart way. We can
-                // not simply call the Refresh method as it may re-serialize
-                // the table in a "searched" or "filtered" state which would
-                // remove rows from the table.
-                this.table.GetSizer().ForceResize();
-                this.table.GetReader().UpdateOriginal(cell);
-                this.table.GetSearcher().BuildIndexes();
+            // Setup the debounce
+            clearTimeout(this.deBounceTimeout);
+            this.deBounceTimeout = setTimeout((function () {
+                // To help the Sizer we will loop through all our inputs and
+                // update their widths accordingly. Otherwise the table size
+                // will not change because the input are set 100% width.
+                this.table.GetCells().parents('.tbody').find('input').each(this.SetWidthOfInput.bind(this));
+                // Refresh the table
+                if (this.table.HasSearcher()) {
+                    // If the table has a searcher, this includes filterable
+                    // tables. We need to update the search index in a smart
+                    // way. We can not simply call the Refresh method as it may
+                    // re-serialize the table in a "searched" or "filtered"
+                    // state which would remove rows from the table.
+                    this.table.GetSizer().ForceResize();
+                    this.table.GetReader().UpdateOriginal(cell);
+                    this.table.GetSearcher().BuildIndexes();
+                }
+                else {
+                    this.table.Refresh();
+                }
+                // Ensure all the inputs have the same width in the same column.
+                this.table.GetColumns().forEach(function (col) {
+                    var maxWidth = -1;
+                    col.forEach(function (cell) {
+                        var width = $(cell).find('input').width();
+                        if (width > maxWidth)
+                            maxWidth = width;
+                    });
+                    col.forEach(function (cell) {
+                        $(cell).find('input').width(maxWidth);
+                    });
+                });
+                // Grab the new edited data
+                var data = cell.find('input').val();
+                // Grab the column heading
+                var col = this.table.GetReader().GetHeading(cell);
+                // Grab the row number or id of the row if it has one.
+                var row;
+                if (cell.parents('ul[id]').length == 1) {
+                    // The assumption is that this ID will reflect the same ID
+                    // used on the server in the database. This is how I setup
+                    // my transparency directives anyway.
+                    row = parseInt(cell.parents('ul[id]').attr('id'));
+                }
+                else {
+                    // This will be a 0 based number of the row
+                    row = this.container.find('.tbody').find('ul').index(cell.parents('ul'));
+                }
+                // Run any OnEdit callbacks
+                this.onEditCallBacks.forEach(function (callback) {
+                    callback(row, col, data, cell);
+                });
+            }).bind(this), this.deBounceWait);
+            // Remember that we are tied to the ctrl+s keyboard shortcut.
+            // So we return false to prevent the browser form performing
+            // it's default action.
+            return false;
+        };
+        /**
+         * Updates the given inputs width to reflect it's content.
+         *
+         * @credit https://github.com/MartinF/jQuery.Autosize.Input
+         */
+        Editor.prototype.SetWidthOfInput = function (index, input) {
+            // Copy the "font" styles from the input to the mirror.
+            //
+            // > NOTE: We do need to do this everytime because it is possible
+            // > some fields could have different styles.
+            $.each([
+                'fontFamily',
+                'fontSize',
+                'fontWeight',
+                'fontStyle',
+                'letterSpacing',
+                'textTransform',
+                'wordSpacing',
+                'textIndent'
+            ], (function (key, val) {
+                this.mirror[0].style[val] = $(input).css(val);
+            }).bind(this));
+            // Copy the text from the input into mirror
+            this.mirror.text($(input).val());
+            // Grab the widths of the mirror and the input
+            var inputWidth = $(input).width();
+            var mirrorWidth = this.mirror.width();
+            // Only update the width of the input if it's
+            // contents is larger than it's current width.
+            if (inputWidth < mirrorWidth) {
+                // Usual deal, IE needs some extra padding.
+                mirrorWidth = mirrorWidth + 5;
+                $(input).width(mirrorWidth);
             }
-            else {
-                this.table.Refresh();
-            }
-            // Grab the row number or id of the row if it has one.
-            var row;
-            if (cell.parents('ul[id]').length == 1) {
-                // The assumption is that this ID will reflect the same ID
-                // used on the server in the database. This is how I setup my
-                // transparency directives anyway.
-                row = parseInt(cell.parents('ul[id]').attr('id'));
-            }
-            else {
-                // This will be a 0 based number of the row
-                row = this.container.find('.tbody').find('ul').index(cell.parents('ul'));
-            }
-            // Grab the column heading, we will pass this on to the callbacks.
-            var col = this.table.GetReader().GetHeading(cell);
-            // Run any OnEdit callbacks
-            this.onEditCallBacks.forEach(function (callback) {
-                callback(row, col, data, cell);
-            });
         };
         return Editor;
     })();
@@ -536,7 +589,12 @@ var SexyTable;
                 // data. These will normally be columns with other UI
                 // elements such as buttons.
                 if (that.headings[cellNo] != "") {
-                    rowData[that.headings[cellNo]] = $(cell).find('.inner').text();
+                    if ($(cell).find('input').length === 1) {
+                        rowData[that.headings[cellNo]] = $(cell).find('input').val();
+                    }
+                    else {
+                        rowData[that.headings[cellNo]] = $(cell).find('.inner').text();
+                    }
                 }
             });
             this.serialized.push(rowData);
@@ -563,7 +621,12 @@ var SexyTable;
                 if (row['_dom'] === parent[0]) {
                     var colNo = parent.find('.inner').index(cell);
                     var colHeading = this.headings[colNo];
-                    row[colHeading] = cell.text();
+                    if (cell.find('input').length === 1) {
+                        row[colHeading] = cell.find('input').val();
+                    }
+                    else {
+                        row[colHeading] = cell.text();
+                    }
                     break;
                 }
             }
@@ -1406,14 +1469,14 @@ var SexyTable;
             if (this.container.hasClass('filterable')) {
                 this.MakeFilterable();
             }
-            // Automatically make the table editable if it has the class
-            if (this.container.hasClass('editable')) {
-                this.MakeEditable();
-            }
             // Up until this point the table will be hidden from view by css.
             // The sizer will automatically calculate the width of the height
             // of the table cells and then show the table.
             this.sizer = new SexyTable.Sizer(this);
+            // Automatically make the table editable if it has the class
+            if (this.container.hasClass('editable')) {
+                this.MakeEditable();
+            }
             // Automatically make the table searchable if Lunr has been loaded.
             if (typeof lunr != 'undefined') {
                 this.MakeSearchable();
@@ -1609,7 +1672,7 @@ var SexyTable;
             if (this.container.find('.tbody').length == 0) {
                 throw new Error('Redrawing requires a .tbody container!');
             }
-            if (typeof rows[0] == 'undefined') {
+            if (typeof rows[0] == 'undefined' || typeof rows[0] == 'function') {
                 this.container.find('.tbody').empty();
                 return;
             }
@@ -1627,6 +1690,8 @@ var SexyTable;
             this.sizer.ForceResize();
             if (reSerialize)
                 this.reader.Serialize();
+            if (this.HasEditor())
+                this.editor.ReAttachEventHandlers();
         };
         /**
          * Quick shortcut to reset the table back to it's original
@@ -1673,15 +1738,19 @@ var SexyTable;
             if (this.filterer == null && this.container.hasClass('filterable')) {
                 this.MakeFilterable();
             }
-            // Make the table editable.
-            if (this.editor == null && this.container.hasClass('editable')) {
-                this.MakeEditable();
-            }
             try {
                 this.GetSizer().ForceResize();
             }
             catch (e) {
                 this.sizer = new SexyTable.Sizer(this);
+            }
+            try {
+                this.GetEditor().InsertEditFields();
+            }
+            catch (e) {
+                if (this.container.hasClass('editable')) {
+                    this.MakeEditable();
+                }
             }
             try {
                 this.GetSearcher().BuildIndexes();
