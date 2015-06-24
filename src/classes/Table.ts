@@ -406,7 +406,7 @@ module SexyTable
                 );
             }
 
-            if (typeof rows[0] == 'undefined')
+            if (typeof rows[0] == 'undefined' || typeof rows[0] == 'function')
             {
                 this.container.find('.tbody').empty(); return;
             }
