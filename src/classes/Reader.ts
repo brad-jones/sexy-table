@@ -191,7 +191,14 @@ module SexyTable
                 // elements such as buttons.
                 if (that.headings[cellNo] != "")
                 {
-                    rowData[that.headings[cellNo]] = $(cell).find('.inner').text();
+                    if ($(cell).find('input').length === 1)
+                    {
+                        rowData[that.headings[cellNo]] = $(cell).find('input').val();
+                    }
+                    else
+                    {
+                        rowData[that.headings[cellNo]] = $(cell).find('.inner').text();
+                    }
                 }
             });
 
@@ -232,7 +239,16 @@ module SexyTable
                 {
                     var colNo = parent.find('.inner').index(cell);
                     var colHeading = this.headings[colNo];
-                    row[colHeading] = cell.text();
+
+                    if (cell.find('input').length === 1)
+                    {
+                        row[colHeading] = cell.find('input').val();
+                    }
+                    else
+                    {
+                        row[colHeading] = cell.text();
+                    }
+
                     break;
                 }
             }
