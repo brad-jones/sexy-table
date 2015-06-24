@@ -215,16 +215,16 @@ module SexyTable
                 this.MakeFilterable();
             }
 
+            // Up until this point the table will be hidden from view by css.
+            // The sizer will automatically calculate the width of the height
+            // of the table cells and then show the table.
+            this.sizer = new Sizer(this);
+
             // Automatically make the table editable if it has the class
             if (this.container.hasClass('editable'))
             {
                 this.MakeEditable();
             }
-
-            // Up until this point the table will be hidden from view by css.
-            // The sizer will automatically calculate the width of the height
-            // of the table cells and then show the table.
-            this.sizer = new Sizer(this);
 
             // Automatically make the table searchable if Lunr has been loaded.
             if (typeof lunr != 'undefined')
@@ -480,15 +480,19 @@ module SexyTable
                 this.MakeFilterable();
             }
 
-            // Make the table editable.
-            if (this.editor == null && this.container.hasClass('editable'))
-            {
-                this.MakeEditable();
-            }
-
             // Force a resize of the table after adding the data
             try { this.GetSizer().ForceResize(); }
             catch (e) { this.sizer = new Sizer(this); }
+
+            // Make the table editable.
+            try { this.GetEditor().InsertEditFields(); }
+            catch (e)
+            {
+                if (this.container.hasClass('editable'))
+                {
+                    this.MakeEditable();
+                }
+            }
 
             // Then we will rebuild the Lunr Indexes
             //
