@@ -41,6 +41,6 @@
     "typescript": "^1.5.0-beta"
   },
   "scripts": {
-    "setup": "npm install && npm install transparency@^0.10.0 --ignore-scripts && tsd reinstall && tsd rebundle"
+    "setup": "npm install && npm install transparency@^0.10.0 --ignore-scripts && tsd reinstall && tsd rebundle && git checkout typings/custom.d.ts"
   }
 }
