@@ -17,7 +17,7 @@ module SexyTable
      * the automatic width calculations. And then we will show the table.
      */
     export var AutoMakeSexy: boolean = true;
-    
+
     /**
      * Make sure jQuery is loaded, while SexyTable does not provide a jQuery
      * plugin (yet). It does use jQuery extensively throughout.
