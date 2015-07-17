@@ -736,7 +736,7 @@ var SexyTable;
                 this.table.GetSorter().Sort(matches);
             }
             // Redraw the table
-            this.table.Redraw(matches, true);
+            this.table.Redraw(matches, true, true);
         };
         /**
          * Build 2 indexes of the table.
@@ -1362,13 +1362,13 @@ var SexyTable;
             }
             switch (sortState) {
                 case 'asc':
-                    this.table.RedrawQuick(this.SortTable(cell));
+                    this.table.Redraw(this.SortTable(cell), null, true);
                     break;
                 case 'desc':
-                    this.table.RedrawQuick(this.SortTable(cell, true));
+                    this.table.Redraw(this.SortTable(cell, true), null, true);
                     break;
                 default:
-                    this.table.RedrawQuick(this.table.GetReader().GetSerialized());
+                    this.table.Redraw(this.table.GetReader().GetSerialized(), null, true);
             }
         };
         /**
@@ -1695,8 +1695,9 @@ var SexyTable;
          * Or an array of DOM Elements, this will empty the contents of the
          * tables tbody container and recreate it with the suppplied table rows.
          */
-        Table.prototype.Redraw = function (rows, reSerialize) {
+        Table.prototype.Redraw = function (rows, reSerialize, quick) {
             if (reSerialize === void 0) { reSerialize = false; }
+            if (quick === void 0) { quick = false; }
             if (this.container.find('.tbody').length == 0) {
                 throw new Error('Redrawing requires a .tbody container!');
             }
@@ -1714,29 +1715,13 @@ var SexyTable;
                 elements = rows;
             }
             this.container.find('.tbody').empty().append(elements);
-            this.InsertCellWrapper();
-            this.sizer.ForceResize();
+            // Running the Sizer is slow, we will opt out in some cases.
+            if (!quick) {
+                this.InsertCellWrapper();
+                this.sizer.ForceResize();
+            }
             if (reSerialize)
                 this.reader.Serialize();
-            if (this.HasEditor())
-                this.editor.ReAttachEventHandlers();
-        };
-        /**
-         * Redrawing the table is an expensive exercise, mainly because we
-         * force a resize of the table. In some cases, such as sorting
-         * we shouldn't have to run the Sizer.
-         */
-        Table.prototype.RedrawQuick = function (rows) {
-            var elements = new Array();
-            if (typeof rows[0]['_dom'] != 'undefined') {
-                for (var row in rows) {
-                    elements.push(rows[row]["_dom"]);
-                }
-            }
-            else {
-                elements = rows;
-            }
-            this.container.find('.tbody').empty().append(elements);
             if (this.HasEditor())
                 this.editor.ReAttachEventHandlers();
         };

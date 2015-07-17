@@ -396,7 +396,7 @@ module SexyTable
          * Or an array of DOM Elements, this will empty the contents of the
          * tables tbody container and recreate it with the suppplied table rows.
          */
-        public Redraw(rows: Array<any>, reSerialize = false): void
+        public Redraw(rows: Array<any>, reSerialize = false, quick = false): void
         {
             if (this.container.find('.tbody').length == 0)
             {
@@ -427,37 +427,15 @@ module SexyTable
 
             this.container.find('.tbody').empty().append(elements);
 
-            this.InsertCellWrapper();
+            // Running the Sizer is slow, we will opt out in some cases.
+            if (!quick)
+            {
+                this.InsertCellWrapper();
 
-            this.sizer.ForceResize();
+                this.sizer.ForceResize();
+            }
 
             if (reSerialize) this.reader.Serialize();
-
-            if (this.HasEditor()) this.editor.ReAttachEventHandlers();
-        }
-
-        /**
-         * Redrawing the table is an expensive exercise, mainly because we
-         * force a resize of the table. In some cases, such as sorting
-         * we shouldn't have to run the Sizer.
-         */
-        public RedrawQuick(rows: Array<any>): void
-        {
-            var elements = new Array<Element>();
-
-            if (typeof rows[0]['_dom'] != 'undefined')
-            {
-                for (var row in rows)
-                {
-                    elements.push(rows[row]["_dom"]);
-                }
-            }
-            else
-            {
-                elements = rows;
-            }
-
-            this.container.find('.tbody').empty().append(elements);
 
             if (this.HasEditor()) this.editor.ReAttachEventHandlers();
         }

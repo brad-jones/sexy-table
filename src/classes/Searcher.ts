@@ -143,7 +143,7 @@ module SexyTable
             }
 
             // Redraw the table
-            this.table.Redraw(matches, true);
+            this.table.Redraw(matches, true, true);
         }
 
         /**

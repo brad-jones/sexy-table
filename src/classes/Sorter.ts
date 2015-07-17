@@ -207,15 +207,15 @@ module SexyTable
             switch(sortState)
             {
                 case 'asc':
-                    this.table.RedrawQuick(this.SortTable(cell));
+                    this.table.Redraw(this.SortTable(cell), null, true);
                 break;
 
                 case 'desc':
-                    this.table.RedrawQuick(this.SortTable(cell, true));
+                    this.table.Redraw(this.SortTable(cell, true), null, true);
                 break;
 
                 default:
-                    this.table.RedrawQuick(this.table.GetReader().GetSerialized());
+                    this.table.Redraw(this.table.GetReader().GetSerialized(), null, true);
             }
         }
 

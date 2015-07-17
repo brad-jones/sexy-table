@@ -644,13 +644,7 @@ declare module SexyTable {
          * Or an array of DOM Elements, this will empty the contents of the
          * tables tbody container and recreate it with the suppplied table rows.
          */
-        Redraw(rows: Array<any>, reSerialize?: boolean): void;
-        /**
-         * Redrawing the table is an expensive exercise, mainly because we
-         * force a resize of the table. In some cases, such as sorting
-         * we shouldn't have to run the Sizer.
-         */
-        RedrawQuick(rows: Array<any>): void;
+        Redraw(rows: Array<any>, reSerialize?: boolean, quick?: boolean): void;
         /**
          * Quick shortcut to reset the table back to it's original
          * state before any sorting, searching, filtering, etc...
