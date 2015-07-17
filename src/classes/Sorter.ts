@@ -92,7 +92,7 @@ module SexyTable
          *
          * > TODO: Refactor the sorter to cache the current sort state.
          */
-        public Sort(rows: Array<Object>): Array<Object>
+        public Sort(rows: Array<Object>): void
         {
             var column: string, sortState: string;
 
@@ -126,8 +126,6 @@ module SexyTable
 
                 if (sortState == 'desc') rows.reverse();
             }
-
-            return rows;
         }
 
         /**

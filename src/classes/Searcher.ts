@@ -134,10 +134,12 @@ module SexyTable
                 }
             }
 
-            // Maintain any current sort state
+            // The results returned from Lunr will be sorted by their relevance
+            // scores however if the table is sortable & "SORTED" we will
+            // maintain the current sort state.
             if (this.table.HasSorter())
             {
-                matches = this.table.GetSorter().Sort(matches);
+                this.table.GetSorter().Sort(matches);
             }
 
             // Redraw the table
