@@ -446,7 +446,7 @@ module SexyTable
          */
         public Reset(): void
         {
-            this.Redraw(this.reader.GetOriginal(), true);
+            this.Redraw(this.reader.GetOriginal(), true, true);
             try { this.GetSorter().ResetSortIcons(); } catch(e) {}
             try { this.GetFilterer().ResetFilters(); } catch(e) {}
         }

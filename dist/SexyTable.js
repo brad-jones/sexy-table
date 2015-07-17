@@ -1730,7 +1730,7 @@ var SexyTable;
          * state before any sorting, searching, filtering, etc...
          */
         Table.prototype.Reset = function () {
-            this.Redraw(this.reader.GetOriginal(), true);
+            this.Redraw(this.reader.GetOriginal(), true, true);
             try {
                 this.GetSorter().ResetSortIcons();
             }
