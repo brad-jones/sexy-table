@@ -729,9 +729,11 @@ var SexyTable;
                     }
                 }
             }
-            // Maintain any current sort state
+            // The results returned from Lunr will be sorted by their relevance
+            // scores however if the table is sortable & "SORTED" we will
+            // maintain the current sort state.
             if (this.table.HasSorter()) {
-                matches = this.table.GetSorter().Sort(matches);
+                this.table.GetSorter().Sort(matches);
             }
             // Redraw the table
             this.table.Redraw(matches, true);
@@ -1286,6 +1288,7 @@ var SexyTable;
          */
         Sorter.prototype.Sort = function (rows) {
             var column, sortState;
+            var that = this;
             this.container.find('.thead i').each(function (index, element) {
                 if ($(element).hasClass('fa-sort-asc')) {
                     sortState = 'asc';
@@ -1294,7 +1297,7 @@ var SexyTable;
                     sortState = 'desc';
                 }
                 if (sortState != null) {
-                    column = $(element).parent().text().toLowerCase().replace(" ", "_");
+                    column = that.table.GetReader().GetHeading($(element).parent());
                     return false;
                 }
             });
@@ -1303,7 +1306,6 @@ var SexyTable;
                 if (sortState == 'desc')
                     rows.reverse();
             }
-            return rows;
         };
         /**
          * This will create an <i> element for each thead cell.
@@ -1355,18 +1357,18 @@ var SexyTable;
             otherIcons.addClass('fa-sort');
             // If we have a server callback let's use it instead.
             if (this.serverCb != null) {
-                this.serverCb($(cell).text().toLowerCase().replace(" ", "_"), sortState);
+                this.serverCb(this.table.GetReader().GetHeading($(cell)), sortState);
                 return;
             }
             switch (sortState) {
                 case 'asc':
-                    this.table.Redraw(this.SortTable(cell));
+                    this.table.RedrawQuick(this.SortTable(cell));
                     break;
                 case 'desc':
-                    this.table.Redraw(this.SortTable(cell, true));
+                    this.table.RedrawQuick(this.SortTable(cell, true));
                     break;
                 default:
-                    this.table.Redraw(this.table.GetReader().GetSerialized());
+                    this.table.RedrawQuick(this.table.GetReader().GetSerialized());
             }
         };
         /**
@@ -1716,6 +1718,25 @@ var SexyTable;
             this.sizer.ForceResize();
             if (reSerialize)
                 this.reader.Serialize();
+            if (this.HasEditor())
+                this.editor.ReAttachEventHandlers();
+        };
+        /**
+         * Redrawing the table is an expensive exercise, mainly because we
+         * force a resize of the table. In some cases, such as sorting
+         * we shouldn't have to run the Sizer.
+         */
+        Table.prototype.RedrawQuick = function (rows) {
+            var elements = new Array();
+            if (typeof rows[0]['_dom'] != 'undefined') {
+                for (var row in rows) {
+                    elements.push(rows[row]["_dom"]);
+                }
+            }
+            else {
+                elements = rows;
+            }
+            this.container.find('.tbody').empty().append(elements);
             if (this.HasEditor())
                 this.editor.ReAttachEventHandlers();
         };

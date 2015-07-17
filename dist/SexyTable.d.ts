@@ -512,7 +512,7 @@ declare module SexyTable {
          *
          * > TODO: Refactor the sorter to cache the current sort state.
          */
-        Sort(rows: Array<Object>): Array<Object>;
+        Sort(rows: Array<Object>): void;
         /**
          * This will create an <i> element for each thead cell.
          * The <i> element will be given apprioriate Font Awesome icon classes.
@@ -645,6 +645,12 @@ declare module SexyTable {
          * tables tbody container and recreate it with the suppplied table rows.
          */
         Redraw(rows: Array<any>, reSerialize?: boolean): void;
+        /**
+         * Redrawing the table is an expensive exercise, mainly because we
+         * force a resize of the table. In some cases, such as sorting
+         * we shouldn't have to run the Sizer.
+         */
+        RedrawQuick(rows: Array<any>): void;
         /**
          * Quick shortcut to reset the table back to it's original
          * state before any sorting, searching, filtering, etc...
