@@ -175,13 +175,13 @@ module SexyTable
                 {
                     if (column == '_guid')
                     {
-                        documentAll[column] = data[row][column];
-                        documentCol[column] = data[row][column];
+                        documentAll[column] = data[row][column].trim();
+                        documentCol[column] = data[row][column].trim();
                     }
                     else if(column != '_dom')
                     {
-                        documentAll[column] = data[row][column];
-                        documentCol[column] = column + ":" + data[row][column];
+                        documentAll[column] = data[row][column].trim();
+                        documentCol[column] = column + ":" + data[row][column].trim();
                     }
                 }
 
