@@ -96,6 +96,8 @@ module SexyTable
         {
             var column: string, sortState: string;
 
+            var that = this;
+
             this.container.find('.thead i').each(function(index, element)
             {
                 if ($(element).hasClass('fa-sort-asc'))
@@ -109,8 +111,10 @@ module SexyTable
 
                 if (sortState != null)
                 {
-                    column = $(element).parent().text()
-                    .toLowerCase().replace(" ", "_");
+                    column = that.table.GetReader().GetHeading
+                    (
+                        $(element).parent()
+                    );
 
                     return false;
                 }
@@ -194,7 +198,7 @@ module SexyTable
             {
                 this.serverCb
                 (
-                    $(cell).text().toLowerCase().replace(" ", "_"),
+                    this.table.GetReader().GetHeading($(cell)),
                     sortState
                 );
 
