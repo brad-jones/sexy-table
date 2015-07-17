@@ -1375,7 +1375,7 @@ var SexyTable;
         Sorter.prototype.SortTable = function (cell, reverse) {
             if (reverse === void 0) { reverse = false; }
             // Get the column name
-            var column = $(cell).text().toLowerCase().replace(" ", "_");
+            var column = this.table.GetReader().GetHeading($(cell));
             // Create a copy of the table rows that we can then sort
             var rows = this.table.GetReader().GetSerialized().slice(0);
             // Sort the rows

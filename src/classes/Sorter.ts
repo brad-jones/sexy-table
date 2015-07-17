@@ -223,7 +223,7 @@ module SexyTable
         protected SortTable(cell: Element, reverse = false): Array<Object>
         {
             // Get the column name
-            var column = $(cell).text().toLowerCase().replace(" ", "_");
+            var column = this.table.GetReader().GetHeading($(cell));
 
             // Create a copy of the table rows that we can then sort
             var rows = this.table.GetReader().GetSerialized().slice(0);
