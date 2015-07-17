@@ -437,6 +437,32 @@ module SexyTable
         }
 
         /**
+         * Redrawing the table is an expensive exercise, mainly because we
+         * force a resize of the table. In some cases, such as sorting
+         * we shouldn't have to run the Sizer.
+         */
+        public RedrawQuick(rows: Array<any>): void
+        {
+            var elements = new Array<Element>();
+
+            if (typeof rows[0]['_dom'] != 'undefined')
+            {
+                for (var row in rows)
+                {
+                    elements.push(rows[row]["_dom"]);
+                }
+            }
+            else
+            {
+                elements = rows;
+            }
+
+            this.container.find('.tbody').empty().append(elements);
+
+            if (this.HasEditor()) this.editor.ReAttachEventHandlers();
+        }
+
+        /**
          * Quick shortcut to reset the table back to it's original
          * state before any sorting, searching, filtering, etc...
          */
