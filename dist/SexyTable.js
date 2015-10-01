@@ -236,14 +236,9 @@ var SexyTable;
             // > NOTE: We do need to do this everytime because it is possible
             // > some fields could have different styles.
             $.each([
-                'fontFamily',
-                'fontSize',
-                'fontWeight',
-                'fontStyle',
-                'letterSpacing',
-                'textTransform',
-                'wordSpacing',
-                'textIndent'
+                'fontFamily', 'fontSize', 'fontWeight',
+                'fontStyle', 'letterSpacing', 'textTransform',
+                'wordSpacing', 'textIndent'
             ], (function (key, val) {
                 this.mirror[0].style[val] = $(input).css(val);
             }).bind(this));
@@ -450,13 +445,11 @@ var SexyTable;
                 try {
                     this.table.GetSorter().UseServer(this.OnSort.bind(this));
                 }
-                catch (e) {
-                }
+                catch (e) { }
                 try {
                     this.table.GetSearcher().UseServer(this.OnSearch.bind(this));
                 }
-                catch (e) {
-                }
+                catch (e) { }
                 this.FirstPage = false;
             }
         };
@@ -557,7 +550,8 @@ var SexyTable;
             else if (this.table.HasWriter()) {
                 // The table has a data binding template so lets
                 // use the data-bind values as our heading names.
-                this.container.find('.data-bind-template ul').first().find('li').each(function (index, el) {
+                this.container.find('.data-bind-template ul').first().find('li')
+                    .each(function (index, el) {
                     var heading = $(el).data('bind');
                     if (heading === undefined)
                         heading = "";
@@ -567,7 +561,8 @@ var SexyTable;
             else {
                 // We do have a thead so lets extract the column headings
                 this.container.find('.thead ul').first().find('li').each(function (index, cell) {
-                    headings.push($(cell).find('.inner').text().toLowerCase().replace(" ", "_"));
+                    headings.push($(cell).find('.inner').text()
+                        .toLowerCase().replace(" ", "_"));
                 });
             }
             return headings;
@@ -755,6 +750,7 @@ var SexyTable;
             this.perColIndex = this.BuildIndexSchema();
             // Grab the table data
             var data = this.table.GetReader().GetOriginal();
+            // Seed both indexes with the table data
             for (var row in data) {
                 var documentAll = {}, documentCol = {};
                 for (var column in data[row]) {
@@ -847,6 +843,12 @@ var SexyTable;
             columns.forEach(function (col) {
                 var maxWidth = -1;
                 col.forEach(function (cell) {
+                    // Ignore filters
+                    if ($(cell).find('input').length == 1) {
+                        if ($(cell).parents('.thead').length == 1) {
+                            return;
+                        }
+                    }
                     var cellWidth = $(cell).outerWidth(true);
                     if (cellWidth > maxWidth) {
                         maxWidth = cellWidth;
@@ -855,15 +857,11 @@ var SexyTable;
                 colWidths.push(maxWidth);
             }, this);
             // Sum up the widths
-            var totalWidth = colWidths.reduce(function (a, b) {
-                return a + b;
-            }, 0);
+            var totalWidth = colWidths.reduce(function (a, b) { return a + b; }, 0);
             // Now convert the column widths into percentages
             columns.forEach(function (col, colNo) {
                 var width = (colWidths[colNo] / totalWidth * 100) + '%';
-                col.forEach(function (cell) {
-                    $(cell).css('width', width);
-                });
+                col.forEach(function (cell) { $(cell).css('width', width); });
             });
             // At this point the columns are sized with the correct ratios.
             // However we can obviously run into the issue where a cell
@@ -903,6 +901,7 @@ var SexyTable;
             // In some cases we may reach the minimum size of a cell / column.
             // This is a taly of the number of pixels we failed to remove.
             var failedToRemove = 0;
+            // Loop through the columns
             for (var colNo = 0; colNo < columns.length; colNo++) {
                 var column = columns[colNo];
                 // We can't resize this column, so skip it.
@@ -922,6 +921,7 @@ var SexyTable;
                 // This will be the minimum width of the column,
                 // if we reach it's minimum width that is.
                 var columnMinimumWidth = -1;
+                // Loop through each cell in the column and attempt to resize it
                 for (var cellNo = 0; cellNo < column.length; cellNo++) {
                     var cell = column[cellNo];
                     // Set the new width of the cell
@@ -956,7 +956,8 @@ var SexyTable;
                     }
                     // It also means that we were unable
                     // to remove some width from the table.
-                    failedToRemove = failedToRemove + (columnMinimumWidth - idealColumnWidth);
+                    failedToRemove = failedToRemove +
+                        (columnMinimumWidth - idealColumnWidth);
                 }
                 else {
                     // The total amount to remove was less than 1px and we
@@ -1130,7 +1131,8 @@ var SexyTable;
         Sizer.prototype.GetColWidths = function (col) {
             var widths = [];
             for (var i = 0; i < col.length; i++) {
-                widths.push($(col[i]).find('.inner').outerWidth(true) + this.GetColumnBorder());
+                widths.push($(col[i]).find('.inner').outerWidth(true) +
+                    this.GetColumnBorder());
             }
             var min = Math.min.apply(null, widths);
             var max = Math.max.apply(null, widths);
@@ -1145,7 +1147,8 @@ var SexyTable;
                     var tmp = $(col[0]).css('min-width');
                     $(col[0]).css('min-width', '0');
                     // Grab the natual width of the column
-                    min = $(col[0]).find('.inner').outerWidth(true) + this.GetColumnBorder();
+                    min = $(col[0]).find('.inner').outerWidth(true) +
+                        this.GetColumnBorder();
                     // Save the value for future recursions
                     $(col[0]).data('min-width', min);
                     // Put the min width value back as it was
@@ -1360,6 +1363,7 @@ var SexyTable;
                 this.serverCb(this.table.GetReader().GetHeading($(cell)), sortState);
                 return;
             }
+            // Now sort the table data and re draw the table
             switch (sortState) {
                 case 'asc':
                     this.table.Redraw(this.SortTable(cell), null, true);
@@ -1403,7 +1407,9 @@ var SexyTable;
          * @see https://github.com/overset/javascript-natural-sort
          */
         Sorter.prototype.naturalSort = function (a, b) {
-            var re = /(^([+\-]?(?:\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?)?$|^0x[\da-fA-F]+$|\d+)/g, sre = /^\s+|\s+$/g, snre = /\s+/g, dre = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/, hre = /^0x[0-9a-f]+$/i, ore = /^0/, i = function (s) {
+            var re = /(^([+\-]?(?:\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?)?$|^0x[\da-fA-F]+$|\d+)/g, sre = /^\s+|\s+$/g, // trim pre-post whitespace
+            snre = /\s+/g, // normalize all whitespace to single ' ' character
+            dre = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/, hre = /^0x[0-9a-f]+$/i, ore = /^0/, i = function (s) {
                 return (this.caseInsensitive && ('' + s).toLowerCase() || '' + s).replace(sre, '');
             }, 
             // convert all to strings strip whitespace
@@ -1424,6 +1430,7 @@ var SexyTable;
                     return 1;
                 }
             }
+            // natural sorting through split numeric strings and default strings
             for (var cLoc = 0, xNl = xN.length, yNl = yN.length, numS = Math.max(xNl, yNl); cLoc < numS; cLoc++) {
                 oFxNcL = normChunk(xN[cLoc], xNl);
                 oFyNcL = normChunk(yN[cLoc], yNl);
@@ -1592,7 +1599,8 @@ var SexyTable;
             if (this.editor != null)
                 return;
             if (typeof Mousetrap == 'undefined') {
-                throw new Error('Editable tables require mousetrap.js ' + 'see: https://craig.is/killing/mice');
+                throw new Error('Editable tables require mousetrap.js ' +
+                    'see: https://craig.is/killing/mice');
             }
             this.editor = new SexyTable.Editor(this);
             return this.editor;
@@ -1618,10 +1626,12 @@ var SexyTable;
             if (this.writer != null)
                 return;
             if (typeof Transparency == 'undefined') {
-                throw new Error('Writeable tables require transparency.js ' + 'see: http://leonidas.github.io/transparency/');
+                throw new Error('Writeable tables require transparency.js ' +
+                    'see: http://leonidas.github.io/transparency/');
             }
             if (this.container.find('.tbody[data-bind]').length == 0) {
-                throw new Error('Writeable tables require a tbody container ' + 'that contains a transparency template.');
+                throw new Error('Writeable tables require a tbody container ' +
+                    'that contains a transparency template.');
             }
             this.writer = new SexyTable.Writer(this);
             return this.writer;
@@ -1668,7 +1678,8 @@ var SexyTable;
             // If this method is called manually and Lunr has not been loaded
             // we will throw an error telling the dev to include Lunr.js
             if (typeof lunr == 'undefined') {
-                throw new Error('Searchable tables require Lunr! ' + 'Get it from http://lunrjs.com/');
+                throw new Error('Searchable tables require Lunr! ' +
+                    'Get it from http://lunrjs.com/');
             }
             this.searcher = new SexyTable.Searcher(this);
             return this.searcher;
@@ -1734,13 +1745,11 @@ var SexyTable;
             try {
                 this.GetSorter().ResetSortIcons();
             }
-            catch (e) {
-            }
+            catch (e) { }
             try {
                 this.GetFilterer().ResetFilters();
             }
-            catch (e) {
-            }
+            catch (e) { }
         };
         /**
          * When new data has been added to the table,
@@ -1749,6 +1758,8 @@ var SexyTable;
         Table.prototype.Refresh = function () {
             // Essure all table cells contain the inner wrapper
             this.InsertCellWrapper();
+            // We have added new data to the table so we need to re-read the
+            // table into the reader, updating it's "original" state if need be.
             try {
                 this.GetReader().Serialize(true);
             }
@@ -1770,12 +1781,14 @@ var SexyTable;
             if (this.filterer == null && this.container.hasClass('filterable')) {
                 this.MakeFilterable();
             }
+            // Force a resize of the table after adding the data
             try {
                 this.GetSizer().ForceResize();
             }
             catch (e) {
                 this.sizer = new SexyTable.Sizer(this);
             }
+            // Make the table editable.
             try {
                 this.GetEditor().InsertEditFields();
             }
@@ -1784,6 +1797,10 @@ var SexyTable;
                     this.MakeEditable();
                 }
             }
+            // Then we will rebuild the Lunr Indexes
+            //
+            // NOTE: When using the Pager, Lunr Indexes will not get built.
+            // No point doing work we don't need to do.
             try {
                 this.GetSearcher().BuildIndexes();
             }
