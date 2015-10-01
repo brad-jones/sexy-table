@@ -37,6 +37,19 @@ module SexyTable
         protected serverCb: Function;
 
         /**
+         * Allows the included natural sort method to be overridden on a per
+         * column basis. Each key of this object refers to a column name.
+         * Each value will be a sort method that we will use for that column.
+         *
+         * > NOTE: If you wish to completely overide the natual sort method
+         * > with your own version. You may supply a wildcard "*" as the key.
+         */
+        protected customSorters:
+        {
+            [index: string]: (a: any, b: any) => number
+        };
+
+        /**
          * Give us the tables top level container element.
          * And we will add some sort controls to the tables first row.
          */
@@ -47,6 +60,8 @@ module SexyTable
             this.EnsureTableHasThead();
 
             this.InsertSortableToggles();
+            
+            this.customSorters = { "*" : this.naturalSort };
         }
 
         /**
@@ -71,6 +86,18 @@ module SexyTable
         public UseServer(serverCb: Function): void
         {
             this.serverCb = serverCb;
+        }
+
+        /**
+         * Sets a custom sorter for a given column name.
+         *
+         * > NOTE: You may provide a default catch-all sorter by supplying
+         * > a column name of "*". This will override the included natural
+         * > sort method.
+         */
+        public SetCustomSorter(column: string, sorter: (a: Object, b: Object) => number): void
+        {
+            this.customSorters[column] = sorter;
         }
 
         /**
@@ -122,7 +149,7 @@ module SexyTable
 
             if (sortState != null)
             {
-                rows.sort(this.sortByKey(column));
+                rows.sort(this.sortByKey(column, this.selectSorter(column)));
 
                 if (sortState == 'desc') rows.reverse();
             }
@@ -231,7 +258,7 @@ module SexyTable
             var rows = this.table.GetReader().GetSerialized().slice(0);
 
             // Sort the rows
-            rows.sort(this.sortByKey(column));
+            rows.sort(this.sortByKey(column, this.selectSorter(column)));
 
             // Reverse the sort if need be
             if (reverse) rows.reverse();
@@ -240,15 +267,32 @@ module SexyTable
         }
 
         /**
+         * Determins which sort method we will use to sort the given column.
+         *
+         * > NOTE: Refer to the customSorters property for more info.
+         */
+        protected selectSorter(column: string): (a: any, b: any) => number
+        {
+            if (this.customSorters.hasOwnProperty(column))
+            {
+                return this.customSorters[column];
+            }
+            else if (this.customSorters.hasOwnProperty("*"))
+            {
+                return this.customSorters["*"];
+            }
+
+            throw new Error("No default sorter set!");
+        }
+
+        /**
          * Allows us to sort by an objects key.
          */
-        protected sortByKey(key)
+        protected sortByKey(key: string, sorter: (a: any, b: any) => number)
         {
-            var that = this;
-
-            return function (a: any, b: any)
+            return (a: any, b: any) =>
             {
-                return that.naturalSort(a[key], b[key]);
+                return sorter(a[key], b[key]);
             }
         }
 
