@@ -1255,6 +1255,7 @@ var SexyTable;
             this.container = this.table.GetContainer();
             this.EnsureTableHasThead();
             this.InsertSortableToggles();
+            this.customSorters = { "*": this.naturalSort };
         }
         /**
          * Sortable tables rely on the thead and tbody containers!
@@ -1271,6 +1272,16 @@ var SexyTable;
          */
         Sorter.prototype.UseServer = function (serverCb) {
             this.serverCb = serverCb;
+        };
+        /**
+         * Sets a custom sorter for a given column name.
+         *
+         * > NOTE: You may provide a default catch-all sorter by supplying
+         * > a column name of "*". This will override the included natural
+         * > sort method.
+         */
+        Sorter.prototype.SetCustomSorter = function (column, sorter) {
+            this.customSorters[column] = sorter;
         };
         /**
          * In some cases, other features such as the Searcher may redraw the
@@ -1305,7 +1316,7 @@ var SexyTable;
                 }
             });
             if (sortState != null) {
-                rows.sort(this.sortByKey(column));
+                rows.sort(this.sortByKey(column, this.selectSorter(column)));
                 if (sortState == 'desc')
                     rows.reverse();
             }
@@ -1385,19 +1396,32 @@ var SexyTable;
             // Create a copy of the table rows that we can then sort
             var rows = this.table.GetReader().GetSerialized().slice(0);
             // Sort the rows
-            rows.sort(this.sortByKey(column));
+            rows.sort(this.sortByKey(column, this.selectSorter(column)));
             // Reverse the sort if need be
             if (reverse)
                 rows.reverse();
             return rows;
         };
         /**
+         * Determins which sort method we will use to sort the given column.
+         *
+         * > NOTE: Refer to the customSorters property for more info.
+         */
+        Sorter.prototype.selectSorter = function (column) {
+            if (this.customSorters.hasOwnProperty(column)) {
+                return this.customSorters[column];
+            }
+            else if (this.customSorters.hasOwnProperty("*")) {
+                return this.customSorters["*"];
+            }
+            throw new Error("No default sorter set!");
+        };
+        /**
          * Allows us to sort by an objects key.
          */
-        Sorter.prototype.sortByKey = function (key) {
-            var that = this;
+        Sorter.prototype.sortByKey = function (key, sorter) {
             return function (a, b) {
-                return that.naturalSort(a[key], b[key]);
+                return sorter(a[key], b[key]);
             };
         };
         /**

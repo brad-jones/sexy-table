@@ -486,6 +486,17 @@ declare module SexyTable {
          */
         protected serverCb: Function;
         /**
+         * Allows the included natural sort method to be overridden on a per
+         * column basis. Each key of this object refers to a column name.
+         * Each value will be a sort method that we will use for that column.
+         *
+         * > NOTE: If you wish to completely overide the natual sort method
+         * > with your own version. You may supply a wildcard "*" as the key.
+         */
+        protected customSorters: {
+            [index: string]: (a: any, b: any) => number;
+        };
+        /**
          * Give us the tables top level container element.
          * And we will add some sort controls to the tables first row.
          */
@@ -500,6 +511,14 @@ declare module SexyTable {
          * See the "Pager" for more details about working with a server backend.
          */
         UseServer(serverCb: Function): void;
+        /**
+         * Sets a custom sorter for a given column name.
+         *
+         * > NOTE: You may provide a default catch-all sorter by supplying
+         * > a column name of "*". This will override the included natural
+         * > sort method.
+         */
+        SetCustomSorter(column: string, sorter: (a: Object, b: Object) => number): void;
         /**
          * In some cases, other features such as the Searcher may redraw the
          * table with new rows. And thus any sorting UI needs to be reset to
@@ -530,9 +549,15 @@ declare module SexyTable {
          */
         protected SortTable(cell: Element, reverse?: boolean): Array<Object>;
         /**
+         * Determins which sort method we will use to sort the given column.
+         *
+         * > NOTE: Refer to the customSorters property for more info.
+         */
+        protected selectSorter(column: string): (a: any, b: any) => number;
+        /**
          * Allows us to sort by an objects key.
          */
-        protected sortByKey(key: any): (a: any, b: any) => number;
+        protected sortByKey(key: string, sorter: (a: any, b: any) => number): (a: any, b: any) => number;
         /**
          * Natural Sort algorithm for Javascript
          *
