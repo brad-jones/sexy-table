@@ -117,19 +117,18 @@ If you wish to build SexyTable from the TypeScript/Less sources:
 
 - Install Tsd http://definitelytyped.org/tsd/
 
-- (Optional) Install & Setup your Fav Typescript IDE.
+- (Optional) Install & Setup your Fav Typescript IDE.  
   Highly recommend: https://atom.io/packages/atom-typescript
 
 - ```git clone git@github.com:brad-jones/sexy-table.git```
 
 - ```cd ./sexy-table```
 
-- ```npm setup```
+- ```npm install```
 
-- ```gulp```
+- ```gulp watch```
 
-- Edit the sources as you see fit.
-  Gulp will watch for changes and compile
+- Edit the sources as you see fit. Gulp will watch for changes and compile
   automatically for you.
 
 I Confess:
