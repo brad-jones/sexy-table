@@ -45,6 +45,6 @@
     "typescript": "^1.6.2"
   },
   "scripts": {
-    "setup": "npm install && npm install transparency@^0.10.0 --ignore-scripts && tsd reinstall && tsd rebundle && git checkout typings/custom.d.ts"
+    "postinstall": "gulp npm-postinstall"
   }
 }
