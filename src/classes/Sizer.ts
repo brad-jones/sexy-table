@@ -71,6 +71,15 @@ module SexyTable
 
                 col.forEach(function(cell)
                 {
+                    // Ignore filters
+                    if ($(cell).find('input').length == 1)
+                    {
+                        if ($(cell).parents('.thead').length == 1)
+                        {
+                            return;
+                        }
+                    }
+
                     var cellWidth = $(cell).outerWidth(true);
 
                     if (cellWidth > maxWidth)
