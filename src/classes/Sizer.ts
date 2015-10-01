@@ -147,7 +147,7 @@ module SexyTable
                 var column = columns[colNo];
 
                 // We can't resize this column, so skip it.
-                if ($(column[0]).data('dont-resize') === true) continue;
+                if (<any>$(column[0]).data('dont-resize') === true) continue;
 
                 // Grab the current column width
                 var currentColumnWidth = this.GetColumnWidth(column);
@@ -428,7 +428,7 @@ module SexyTable
 
             for (var i = 0; i < columns.length; i++)
             {
-                if ($(columns[i][0]).data('dont-resize') === true)
+                if (<any>$(columns[i][0]).data('dont-resize') === true)
                 {
                     --resizeable_cols;
                 }

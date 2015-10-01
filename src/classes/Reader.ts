@@ -144,7 +144,7 @@ module SexyTable
                 this.container.find('.data-bind-template ul').first().find('li')
                 .each(function(index, el)
                 {
-                    var heading = $(el).data('bind');
+                    var heading = <any>$(el).data('bind');
                     if (heading === undefined) heading = "";
                     headings.push(heading);
                 });

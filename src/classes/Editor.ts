@@ -158,7 +158,7 @@ module SexyTable
             if ($(cell).parents('.thead').length > 0) return false;
 
             // Can't edit cells that have explicitly been set not be editable.
-            if ($(cell).data('no-edit') === true) return false;
+            if (<any>$(cell).data('no-edit') === true) return false;
 
             // Can't edit cells without a column heading
             var inner = $(cell).find('.inner');
