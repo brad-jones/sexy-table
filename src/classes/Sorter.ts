@@ -95,7 +95,7 @@ module SexyTable
          * > a column name of "*". This will override the included natural
          * > sort method.
          */
-        public SetCustomSorter(column: string, sorter: (a: Object, b: Object) => number): void
+        public SetCustomSorter(column: string, sorter: (a: any, b: any) => number): void
         {
             this.customSorters[column] = sorter;
         }
