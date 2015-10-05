@@ -272,11 +272,15 @@ declare module SexyTable {
          */
         protected index: lunr.Index;
         /**
-         * The per column lunr.js index. Use for column specific searches.
+         * The per column lunr.js indexes. Used for column specific searches.
          *
-         * @see https://goo.gl/1Ao45P
+         * > NOTE: We were using this solution: https://goo.gl/1Ao45P
+         * > I found this unsatisfactory and have now setup an independent lunr
+         * > index for each column of the table.
          */
-        protected perColIndex: lunr.Index;
+        protected perColIndexes: {
+            [index: string]: lunr.Index;
+        };
         /**
          * Instead of using Lunr for searching, we can hookup the Searcher
          * to a server backend. See the "Pager" for more details about working
@@ -318,18 +322,43 @@ declare module SexyTable {
          */
         Query(terms: string, column?: string): void;
         /**
-         * Build 2 indexes of the table.
+         * Build the indexes of the table.
          *
          *   - We use one for global searches across the entire table.
-         *   - We use a second for searches specific to a column.
+         *   - We then create an index for each column of the table.
          *
-         * @see https://goo.gl/1Ao45P
+         * > NOTE: We were using this solution: https://goo.gl/1Ao45P
+         * > I found this unsatisfactory and have now setup an independent lunr
+         * > index for each column of the table.
          */
         BuildIndexes(): void;
         /**
-         * Builds the Lunr Index Schema for both indexes.
+         * Builds the Lunr Index Schema for the global index.
          */
         protected BuildIndexSchema(): lunr.Index;
+        /**
+         * Given a cell value, we prepare it to be inserted into the lunr index.
+         *
+         * Lunr does a pretty damn good job of indexing paragraphs of text.
+         * Where it fails is indexing single items such as a timestamp.
+         * Lunr sees the timestamp as a single word and as such you can not
+         * search on the diffrent parts (day, month, year) of the date.
+         *
+         * By removing all special characters, used for formatting and replacing
+         * them with spaces, lunr now tokenizes the timestamp, allowing the user
+         * to seach by year for example.
+         *
+         * This same principal applies to things like hyphenated words, a user
+         * may not always type the hypens in their search query because they are
+         * lazy.
+         *
+         * However we still need to cater for the case that an exact search term
+         * is given thus we index both the unmodified cell value as well as this
+         * prepared version.
+         *
+         * The Exact field get a boost value applied.
+         */
+        protected PrepareIndexValue(value: string): string;
     }
 }
 declare module SexyTable {
@@ -518,7 +547,7 @@ declare module SexyTable {
          * > a column name of "*". This will override the included natural
          * > sort method.
          */
-        SetCustomSorter(column: string, sorter: (a: Object, b: Object) => number): void;
+        SetCustomSorter(column: string, sorter: (a: any, b: any) => number): void;
         /**
          * In some cases, other features such as the Searcher may redraw the
          * table with new rows. And thus any sorting UI needs to be reset to
