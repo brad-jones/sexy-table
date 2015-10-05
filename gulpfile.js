@@ -113,7 +113,7 @@ gulp.task('build', ['clean', 'compile-ts', 'compile-less']);
 /**
  * Watches source for changes and will continuously re-build until stopped.
  */
-gulp.task('watch', function()
+gulp.task('watch', ['build'], function()
 {
     gulp.watch('./src/**/*.ts', ['compile-ts']);
     gulp.watch('./src/**/*.less', ['compile-less']);
