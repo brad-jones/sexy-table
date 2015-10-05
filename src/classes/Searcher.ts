@@ -27,11 +27,16 @@ module SexyTable
         protected index: lunr.Index;
 
         /**
-         * The per column lunr.js index. Use for column specific searches.
+         * The per column lunr.js indexes. Used for column specific searches.
          *
-         * @see https://goo.gl/1Ao45P
+         * > NOTE: We were using this solution: https://goo.gl/1Ao45P
+         * > I found this unsatisfactory and have now setup an independent lunr
+         * > index for each column of the table.
          */
-        protected perColIndex: lunr.Index;
+        protected perColIndexes:
+        {
+            [index: string]: lunr.Index
+        };
 
         /**
          * Instead of using Lunr for searching, we can hookup the Searcher
@@ -117,7 +122,7 @@ module SexyTable
             }
             else
             {
-                results = this.perColIndex.search(column + ":" + terms);
+                results = this.perColIndexes[column].search(terms);
             }
 
             // Collect the rows that match our results from lunr
@@ -147,51 +152,82 @@ module SexyTable
         }
 
         /**
-         * Build 2 indexes of the table.
+         * Build the indexes of the table.
          *
          *   - We use one for global searches across the entire table.
-         *   - We use a second for searches specific to a column.
+         *   - We then create an index for each column of the table.
          *
-         * @see https://goo.gl/1Ao45P
+         * > NOTE: We were using this solution: https://goo.gl/1Ao45P
+         * > I found this unsatisfactory and have now setup an independent lunr
+         * > index for each column of the table.
          */
         public BuildIndexes(): void
         {
             // Bail out if we have been told to use a server for all searching.
             if (this.serverCb != null) return;
 
-            // Build the schema's for both indexes
-            this.index = this.BuildIndexSchema();
-            this.perColIndex = this.BuildIndexSchema();
-
             // Grab the table data
             var data = this.table.GetReader().GetOriginal();
 
-            // Seed both indexes with the table data
+            // Build the global index
+            this.index = this.BuildIndexSchema();
             for (var row in data)
             {
-                var documentAll = {}, documentCol = {};
+                var document = {};
 
                 for (var column in data[row])
                 {
                     if (column == '_guid')
                     {
-                        documentAll[column] = data[row][column].trim();
-                        documentCol[column] = data[row][column].trim();
+                        document['_guid'] = data[row]['_guid'];
                     }
                     else if(column != '_dom')
                     {
-                        documentAll[column] = data[row][column].trim();
-                        documentCol[column] = column + ":" + data[row][column].trim();
+                        document[column + 'Exact'] = data[row][column];
+                        document[column] = this.PrepareIndexValue
+                        (
+                            data[row][column]
+                        );
                     }
                 }
 
-                this.index.add(documentAll);
-                this.perColIndex.add(documentCol);
+                this.index.add(document);
+            }
+
+            // Now build an index for each column of the table
+            this.perColIndexes = {};
+            for (var row in data)
+            {
+                for (var column in data[row])
+                {
+                    if (column != '_guid' && column != '_dom')
+                    {
+                        if (!this.perColIndexes.hasOwnProperty(column))
+                        {
+                            this.perColIndexes[column] = lunr(function()
+                            {
+                                this.ref('_guid');
+                                this.field('colValueExact', {boost: 10});
+                                this.field('colValue');
+                            });
+                        }
+
+                        this.perColIndexes[column].add
+                        ({
+                            '_guid': data[row]['_guid'],
+                            'colValueExact': data[row][column],
+                            'colValue': this.PrepareIndexValue
+                            (
+                                data[row][column]
+                            )
+                        });
+                    }
+                }
             }
         }
 
         /**
-         * Builds the Lunr Index Schema for both indexes.
+         * Builds the Lunr Index Schema for the global index.
          */
         protected BuildIndexSchema(): lunr.Index
         {
@@ -205,10 +241,38 @@ module SexyTable
                 {
                     if (headings[i] != '_guid' && headings[i] != '_dom')
                     {
+                        this.field(headings[i] + 'Exact', {boost: 10});
                         this.field(headings[i]);
                     }
                 }
             });
+        }
+
+        /**
+         * Given a cell value, we prepare it to be inserted into the lunr index.
+         *
+         * Lunr does a pretty damn good job of indexing paragraphs of text.
+         * Where it fails is indexing single items such as a timestamp.
+         * Lunr sees the timestamp as a single word and as such you can not
+         * search on the diffrent parts (day, month, year) of the date.
+         *
+         * By removing all special characters, used for formatting and replacing
+         * them with spaces, lunr now tokenizes the timestamp, allowing the user
+         * to seach by year for example.
+         *
+         * This same principal applies to things like hyphenated words, a user
+         * may not always type the hypens in their search query because they are
+         * lazy.
+         *
+         * However we still need to cater for the case that an exact search term
+         * is given thus we index both the unmodified cell value as well as this
+         * prepared version.
+         *
+         * The Exact field get a boost value applied.
+         */
+        protected PrepareIndexValue(value: string): string
+        {
+            return value.trim().replace(/[^\w\s]/gi, ' ');
         }
     }
 }
